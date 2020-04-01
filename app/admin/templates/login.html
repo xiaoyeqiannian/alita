@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>登录</title>
+
+<link rel="stylesheet" href="{{ url_for('admin.static', filename='css/login.css') }}">
+</head>
+
+<body>
+<div class="materialContainer">
+    <div class="box">
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="title">登录</div>
+            <div class="input">
+                <label for="phone">手机号</label>
+                <input type="text" name="phone" id="phone">
+                <span class="spin"></span>
+            </div>
+            <div class="input">
+                <label for="password">密码</label>
+                <input type="password" name="password" id="password">
+                <span class="spin"></span>
+            </div>
+            {%if error %}
+                <div style="color: #e74a3b">{{error}}</div>
+            {% endif %}
+            <div type="submit" class="button login">
+                <button>
+                    <span>登录</span>
+                    <i class="fa fa-check"></i>
+                </button>
+            </div>
+            <a href="javascript:" class="pass-forgot">忘记密码？</a>
+        </form>
+    </div>
+
+    <div class="overbox">
+        <div class="material-button alt-2">
+            <span class="shape"></span>
+        </div>
+        <div class="title">注册</div>
+        <div class="input">
+            <label for="regphone">手机号</label>
+            <input type="text" name="phone" id="regphone">
+            <span class="spin"></span>
+        </div>
+        <div class="input">
+            <label for="regpwd">密码</label>
+            <input type="password" name="password" id="regpwd">
+            <span class="spin"></span>
+        </div>
+        <div class="input">
+            <label for="reregpwd">确认密码</label>
+            <input type="password" name="reregpwd" id="reregpwd">
+            <span class="spin"></span>
+        </div>
+        <div id="btn_regist" class="button">
+            <button>
+                <span>注册</span>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script type="text/javascript" src="{{ url_for('admin.static', filename='js/login.js') }}"></script>
+
+</body>
+</html>

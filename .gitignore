@@ -1,0 +1,55 @@
+*.py[cod]
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+build
+apidoc
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib64
+.idea
+logs
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+.pytest_cache/
+
+# Translations
+*.mo
+
+# Mr Developer
+*.bak
+.mr.developer.cfg
+.project
+.pydevproject
+.qiniu_pythonsdk_hostscache.json
+log/
+.DS_Store
+crawler_state.txt
+gunicorn.pid
+*.*~
+*.*#
+*.#*
+.swp
+.idea
+.vscode/
+
+# Tags
+TAGS
+
+# filestore
+filestore
+
