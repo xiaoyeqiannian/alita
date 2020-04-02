@@ -19,19 +19,19 @@ def login():
         phone = request.form.get('phone', '')
         password = request.form.get('password', '')
         if len(phone) == 0 or len(password) == 0:
-            error = '请输入手机号和密码'
+            error = 'need phone number and password'
             return render_template('login.html', **locals())
 
         manager = get_manager_by_phone(phone)
         if not manager:
-            error = '该用户不存在,请重新输入'
+            error = "cann't find this manager"
         elif manager.state <= 0:
-            error = '审核中,请稍后再试'
+            error = 'invalid manager'
         elif hmac_encrypt(password) != manager.password.encode('utf8'):
-            error = '密码错误,请重新输入'
+            error = 'invalid password'
         else:
             login_user(manager)
-            add_log('登录成功', '用户:%s,手机号:%s 成功登录' % (current_user.id, current_user.phone))
+            add_log('login', 'manager:%s,phone:%s' % (current_user.id, current_user.phone))
             next = request.args.get('next')
             return redirect(next or url_for('admin.admin_index'))
 
@@ -43,7 +43,7 @@ def login():
 @verify_permission
 def logout():
     permission = ''
-    add_log('退出登录', '用户:%s,手机号:%s 退出登录' % (current_user.id, current_user.phone))
+    add_log('logout', 'manager:%s,phone:%s' % (current_user.id, current_user.phone))
     logout_user()
     return jsonify(code=RETCODE.OK, data={})
 
@@ -54,17 +54,17 @@ def regist():
     phone = request.form.get('phone', '')
     password = request.form.get('password', '')
     if len(phone) == 0 or len(password) == 0:
-        return jsonify(code=RETCODE.PARAMERR, error="请输入手机号和密码")
+        return jsonify(code=RETCODE.PARAMERR, error="need phone number and password")
 
     manager = get_manager_by_phone(phone)
     if manager:
-        return jsonify(code=RETCODE.USERERR, error="该用户已注册")
+        return jsonify(code=RETCODE.USERERR, error="this manager is registed")
 
     manager = regist_manager(phone, password)
     if not manager:
-        return jsonify(code=RETCODE.DATAERR, error="注册失败")
+        return jsonify(code=RETCODE.DATAERR, error="regist fail")
 
-    add_log('注册成功', '用户:%s,手机号:%s 成功注册' % (manager.id, manager.phone))
+    add_log('regist', 'manager:%s,phone:%s' % (manager.id, manager.phone))
     return jsonify(code=RETCODE.OK, data={})
 
 
@@ -83,8 +83,9 @@ def admin_index():
 @verify_permission
 def visit_statistics():
     permission = ''
-    data = {'x_data': ['1月','2月','3月','4月','5月','6月'],
-            'data': [100,243,323,424,667,133]}
+    # just for test
+    data = {'x_data': ['Jan','Feb','Mar','Apr','May','June'],
+            'data': [100, 243, 323, 424, 667, 133]}
     return jsonify(code=RETCODE.OK, data=data) 
 
 
@@ -92,7 +93,8 @@ def visit_statistics():
 @verify_permission
 def source_list():
     permission = ''
-    data = {'sources': ['微信', '微博', '百度'],
+    # just for test
+    data = {'sources': ['wechat', 'weibo', 'baidu'],
             'mix_data': [1,2,3]}
     return jsonify(code=RETCODE.OK, data=data) 
 
@@ -144,7 +146,7 @@ def admin_role():
         routes = request.form.get('routes')
         permissions = request.form.getlist('permissions[]')
         if not role_id and (not en_name or not name or not routes or not permissions):
-            return jsonify(code=RETCODE.PARAMERR, error="请填写完整再试")
+            return jsonify(code=RETCODE.PARAMERR, error="please complate")
 
         isok, ret = modify_role(role_id, en_name=en_name,
                                          name=name,
@@ -185,7 +187,7 @@ def admin_permission():
         method = request.form.get('method')
         uri = request.form.get('uri')
         if not pid and (not name or not method or not uri):
-            return jsonify(code=RETCODE.PARAMERR, error="请填写完整再试")
+            return jsonify(code=RETCODE.PARAMERR, error="please complate and try again")
 
         isok, ret = modify_permission(pid, name=name,
                                            method=method,

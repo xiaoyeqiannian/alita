@@ -10,7 +10,7 @@ def date2string(dt, format="%Y-%m-%d %H:%M:%S"):
     return dt.strftime(format)
 
 def date2week(dt):
-    # 返回 （2107, 1, 1） 哪一年的 第几周 第几天
+    # return （2107, 1, 1） 哪一年的 第几周 第几天
     return dt.isocalendar()
 
 def date2weeknumber(a_dt):
@@ -27,12 +27,6 @@ def date2weeknumber(a_dt):
 
 
 def string2date(dt_str, format="%Y-%m-%d %H:%M:%S"):
-    """
-    时间字符串转为时间
-    :param dt_str:
-    :param format:
-    :return:
-    """
     return datetime.datetime.strptime(dt_str, format)
 
 
@@ -43,11 +37,6 @@ def tms2date(tms):
     return otherStyleTime
 
 def date2tms(dt):
-    """
-    时间转为时间戳
-    :param dt:
-    :return:
-    """
     return int(time.mktime(dt.timetuple()))
 
 
@@ -158,9 +147,6 @@ def datetime_offset_by_month(datetime1, n = 1):
 '''''
 * datestr转换成secs
 * 将时间字符串转化为秒("2012-07-20 00:00:00"->1342713600.0)
-* @param datestr;
-* @return secs;
-*
 '''
 def datestr2secs(datestr):
     tmlist = []
@@ -182,9 +168,6 @@ def datestr2secs(datestr):
 '''''
 * secs转换成datestr
 * 将秒转化为时间字符串(1342713600.0->"2012-07-20 00:00:00")
-* @param secs;
-* @return datestr;
-*
 '''
 def secs2datestr(secs):
     if int(secs) < 0:

@@ -13,7 +13,7 @@ class FManager(Manager):
 
     @property
     def state_cn(self):
-        return ('待审核', '已审核', '已删除')[self.state]
+        return ('invalid', 'valid', 'deleted')[self.state]
 
     @classmethod
     def get(cls, _id):
@@ -42,7 +42,7 @@ class FManager(Manager):
     def modify(cls, _id, **kwargs):
         c = cls.get(_id)
         if not c:
-            return False, '未找到此用户'
+            return False, "cann't find this user"
 
         if kwargs.get('phone'): 
             c.phone = kwargs.get('phone')
@@ -99,7 +99,7 @@ class FRole(Role):
     @classmethod
     def add(cls, en_name, name, description, routes, permissions):
         if cls.name_is_exist(en_name, name):
-            return False, '姓名或英文名称已存在'
+            return False, 'this name is existed'
 
         r = Role()
         r.en_name = en_name
@@ -124,18 +124,18 @@ class FRole(Role):
     def modify(cls, _id, **kwargs):
         r = cls.get(_id)
         if not r:
-            return False, '角色未找到'
+            return False, "cann't find this role"
 
         if kwargs.get('en_name'):
             if r.en_name != kwargs.get('en_name'):
                 if cls.name_is_exist(en_name = kwargs.get('en_name')):
-                    return False, '英文名称已存在'
+                    return False, 'the english name is existed'
 
             r.en_name = kwargs.get('en_name')
         if kwargs.get('name'):
             if r.name != kwargs.get('name'):
                 if cls.name_is_exist(name = kwargs.get('name')):
-                    return False, '姓名已存在'
+                    return False, 'the name is existed'
 
             r.name = kwargs.get('name')
         if kwargs.get('description'):
@@ -203,7 +203,7 @@ class FPermission(Permission):
     def modify(cls, _id, **kwargs):
         r = cls.get(_id)
         if not r:
-            return False, '权限未找到'
+            return False, "cann't find this permission"
 
         if kwargs.get('name'):
             r.name = kwargs.get('name')
@@ -220,7 +220,7 @@ class FAdminLog(AdminLog):
     __abstract__ = True
 
     @classmethod
-    def query(cls, page, per_page, start, end):
+    def query(cls, page, per_page, start=None, end=None):
         q = db.session.query(AdminLog).filter(AdminLog.state>0)\
                             .order_by(AdminLog.id.desc())
         if start:

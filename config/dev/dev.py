@@ -1,8 +1,6 @@
 #coding: utf-8
-import os, inc
-_basedir = os.path.abspath(os.path.dirname(os.path.dirname(inc.__file__)))
 
-# 加载的app
+# the apps for loading
 INSTALLED_APPS = [
     'app.api',
     'app.admin',

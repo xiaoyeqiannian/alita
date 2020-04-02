@@ -1,6 +1,6 @@
 #coding: utf-8
 
-from inc import db, db_manage
+from inc import db
 from inc.cached import cached
 from flask_sqlalchemy import event
 from app.api.models import Account
@@ -46,7 +46,7 @@ class FAccount(Account):
 
     @classmethod
     def modify(cls, _id, **kwargs):
-        #note:如果用update更新,会无法触发‘after_update’event
+        #note: directly use update,cann't trigger ‘after_update’ event
         c = cls.get(_id)
         if not c:
             return False
@@ -75,24 +75,6 @@ class FAccount(Account):
         db.session.delete(c)
         db.session.commit()
 
-    #==================================================================================================
-    #
-    #active_history=False
-    #如果为true,则表示“set”事件希望无条件地接收替换的“old”值,即使这需要触发数据库加载.
-    #注意 active_history 也可以通过直接设置column_property()和relationship()
-    #
-    #propagate=False
-    #如果为true,则将不仅为给定的class属性建立listener函数,而且为该类的所有当前子类以及
-    #该类的所有未来子类上同名的属性建立listener函数,使用一个额外的侦听器来侦听插入事件
-    #
-    #raw=False
-    #如果为true，则事件的“target”参数将是 InstanceState 管理对象，而不是映射实例本身
-    #
-    #retval=False
-    #如果为true，则用户定义的事件侦听必须从函数返回“value”参数。这使侦听函数有机会更改
-    #最终用于“set”或“append”事件的值
-    #
-    #=================================================================================================
     @event.listens_for(Account, "after_insert", propagate=False)
     def listen_add_account(self, connection, target):
         print("after_insert", target)

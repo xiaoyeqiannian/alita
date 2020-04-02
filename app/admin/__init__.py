@@ -19,7 +19,7 @@ mod = Blueprint('admin',
 
 csrf = CSRFProtect(app)
 
-# 登录配置
+# login config
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.init_app(app=app)

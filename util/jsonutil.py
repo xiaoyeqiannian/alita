@@ -9,7 +9,7 @@ from flask import jsonify
 
 
 class JSONEncoder(json.JSONEncoder):
-    '''能输出 datetime'''
+    '''return datetime'''
 
     def default(self, o):
         if isinstance(o, datetime.datetime):
@@ -88,7 +88,6 @@ def jsonify_response(data={}, result_code=0, status_code = 200, msg="", cache_co
     if cache_control:
         resp.cache_control.max_age = cache_control
 
-    # TODO: 添加更多 http header
     return resp
 
 def json_dumps(data={}, result_code=0, status_code = 200, msg="", cache_control= 300):

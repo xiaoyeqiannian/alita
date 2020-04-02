@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>登录</title>
+<title>SIGN IN</title>
 
 <link rel="stylesheet" href="{{ url_for('admin.static', filename='css/login.css') }}">
 </head>
@@ -12,14 +12,14 @@
     <div class="box">
         <form method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="title">登录</div>
+            <div class="title">sign in</div>
             <div class="input">
-                <label for="phone">手机号</label>
+                <label for="phone">phone</label>
                 <input type="text" name="phone" id="phone">
                 <span class="spin"></span>
             </div>
             <div class="input">
-                <label for="password">密码</label>
+                <label for="password">password</label>
                 <input type="password" name="password" id="password">
                 <span class="spin"></span>
             </div>
@@ -28,11 +28,11 @@
             {% endif %}
             <div type="submit" class="button login">
                 <button>
-                    <span>登录</span>
+                    <span>sign in</span>
                     <i class="fa fa-check"></i>
                 </button>
             </div>
-            <a href="javascript:" class="pass-forgot">忘记密码？</a>
+            <a href="javascript:" class="pass-forgot">forget password？</a>
         </form>
     </div>
 
@@ -40,25 +40,25 @@
         <div class="material-button alt-2">
             <span class="shape"></span>
         </div>
-        <div class="title">注册</div>
+        <div class="title">sign up</div>
         <div class="input">
-            <label for="regphone">手机号</label>
+            <label for="regphone">phone</label>
             <input type="text" name="phone" id="regphone">
             <span class="spin"></span>
         </div>
         <div class="input">
-            <label for="regpwd">密码</label>
+            <label for="regpwd">password</label>
             <input type="password" name="password" id="regpwd">
             <span class="spin"></span>
         </div>
         <div class="input">
-            <label for="reregpwd">确认密码</label>
+            <label for="reregpwd">confirm password</label>
             <input type="password" name="reregpwd" id="reregpwd">
             <span class="spin"></span>
         </div>
         <div id="btn_regist" class="button">
             <button>
-                <span>注册</span>
+                <span>sign up</span>
             </button>
         </div>
     </div>

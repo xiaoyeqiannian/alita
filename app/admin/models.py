@@ -8,7 +8,6 @@ from sqlalchemy import (Column, Integer, String, DateTime, Date, ForeignKey,
                         SmallInteger, Text, Float, TEXT)
 
 
-# 权限与角色多对多关系
 role2permission = db.Table(
     'role2permission',
     Column('role_id', Integer, ForeignKey('role.id')),
@@ -50,7 +49,6 @@ class Role(db.Model):
     description = Column("description", String(255), nullable=True, default="", doc=u"")
     routes = Column("routes", Text, nullable=True, default="", doc=u"页面路径")
 
-    # 角色对管理员是多对一关系
     managers = db.relationship('Manager', backref='role')
     permissions = db.relationship('Permission', secondary=role2permission, backref='roles')
 

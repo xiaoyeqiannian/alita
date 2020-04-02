@@ -46,25 +46,25 @@
                     or 'permission' in current_user.routes
               %}
               <div class="sidebar-heading">
-                运营
+                operation
               </div>
 
               <!-- Nav Item -->
               <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
                   <i class="fas fa-fw fa-cog"></i>
-                  <span>组织</span>
+                  <span>Organization</span>
                 </a>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                   <div class="bg-white py-2 collapse-inner rounded">
                     {% if current_user.role.en_name=='superadmin' or 'user' in current_user.routes %}
-                    <a class="collapse-item" href="user">用户</a>
+                    <a class="collapse-item" href="user">User</a>
                     {% endif %}
                     {% if current_user.role.en_name=='superadmin' or 'role' in current_user.routes %}
-                    <a class="collapse-item" href="role">角色</a>
+                    <a class="collapse-item" href="role">Role</a>
                     {% endif %}
                     {% if current_user.role.en_name=='superadmin' or 'permission' in current_user.routes %}
-                    <a class="collapse-item" href="permission">权限</a>
+                    <a class="collapse-item" href="permission">Permission</a>
                     {% endif %}
                   </div>
                 </div>
@@ -76,13 +76,13 @@
               <!-- Heading -->
               {% if current_user.role.en_name=='superadmin' or 'log' in current_user.routes %}
               <div class="sidebar-heading">
-                运维
+                Maintenance
               </div>
 
               <li class="nav-item">
                 <a class="nav-link" href="log">
                   <i class="fas fa-fw fa-table"></i>
-                  <span>日志</span></a>
+                  <span>Logging</span></a>
               </li>
               <!-- Divider -->
               <hr class="sidebar-divider d-none d-md-block">
@@ -138,7 +138,7 @@
                       <!-- Dropdown - Alerts -->
                       <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
                         <h6 class="dropdown-header">
-                          通知
+                          Notification
                         </h6>
                         <a class="dropdown-item d-flex align-items-center" href="#">
                           <div class="mr-3">
@@ -148,7 +148,7 @@
                           </div>
                           <div>
                             <div class="small text-gray-500">December 12, 2019</div>
-                            <span class="font-weight-bold">报了个错</span>
+                            <span class="font-weight-bold">just for test</span>
                           </div>
                         </a>
                         <a class="dropdown-item d-flex align-items-center" href="#">
@@ -159,7 +159,7 @@
                           </div>
                           <div>
                             <div class="small text-gray-500">December 7, 2019</div>
-                            没啥事
+                            just for test
                           </div>
                         </a>
                         <a class="dropdown-item d-flex align-items-center" href="#">
@@ -173,7 +173,7 @@
                             pass
                           </div>
                         </a>
-                        <a class="dropdown-item text-center small text-gray-500" href="#">显示全部</a>
+                        <a class="dropdown-item text-center small text-gray-500" href="#">more</a>
                       </div>
                     </li>
 
@@ -187,7 +187,7 @@
                       <!-- Dropdown - Messages -->
                       <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
                         <h6 class="dropdown-header">
-                          消息
+                          Message
                         </h6>
                         <a class="dropdown-item d-flex align-items-center" href="#">
                           <div class="dropdown-list-image mr-3">
@@ -209,7 +209,7 @@
                             <div class="small text-gray-500">Chicken the Dog · 2w</div>
                           </div>
                         </a>
-                        <a class="dropdown-item text-center small text-gray-500" href="#">更多</a>
+                        <a class="dropdown-item text-center small text-gray-500" href="#">more</a>
                       </div>
                     </li>
 
@@ -225,16 +225,16 @@
                       <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                         <a class="dropdown-item" href="#">
                           <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                          个人信息
+                          Profile
                         </a>
                         <a class="dropdown-item" href="#">
                           <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                          设置
+                          Setting
                         </a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
                           <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                          退出
+                          Sign out
                         </a>
                       </div>
                     </li>
@@ -276,15 +276,15 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">确定退出?</h5>
+          <h5 class="modal-title" id="exampleModalLabel">Logout?</h5>
           <button class="close" type="button" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
         </div>
-        <div class="modal-body">选择退出将重置缓存</div>
+        <div class="modal-body">Logout will clean session</div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">取消</button>
-          <a id="logout" class="btn btn-primary" href="login">退出</a>
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+          <a id="logout" class="btn btn-primary" href="login">Yes</a>
         </div>
       </div>
     </div>

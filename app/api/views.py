@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 @mod.route("/account/<account_id>", methods=["GET", "POST", "DELETE"])
 def api_account(account_id):
     if not account_id or not account_id.isdigit():
-        return jsonify(code=RETCODE.PARAMERR, error="参数错误")
+        return jsonify(code=RETCODE.PARAMERR, error="param invalid")
 
     if request.method == "GET":
         data = proce.get_account(account_id)
@@ -56,7 +56,7 @@ def add_account():
 @mod.route("/enable/account/<account_id>", methods=["post"])
 def enable_account(account_id):
     if not account_id or not account_id.isdigit():
-        return jsonify(code=RETCODE.PARAMERR, error="参数错误")
+        return jsonify(code=RETCODE.PARAMERR, error="param invalid")
         
     isok = proce.enable_account(account_id)
     if not isok:
@@ -68,7 +68,7 @@ def enable_account(account_id):
 @mod.route("/disable/account/<account_id>", methods=["post"])
 def disable_account(account_id):
     if not account_id or not account_id.isdigit():
-        return jsonify(code=RETCODE.PARAMERR, error="参数错误")
+        return jsonify(code=RETCODE.PARAMERR, error="param invalid")
 
     isok = proce.disable_account(account_id)
     if not isok:

@@ -8,16 +8,16 @@
 
 {% block page %}
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">用户管理</h1>
+        <h1 class="h3 mb-0 text-gray-800">User Manager</h1>
         <a class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" target="view_window" href="/admin/user?download=true">
             <i class="fas fa-download fa-sm text-white-50"></i>
-            导出数据
+            Export 
         </a>
     </div>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">用户列表</h6>
+          <h6 class="m-0 font-weight-bold text-primary">user list</h6>
         </div>
         <div class="card-body">
           <div class="table-responsive">
@@ -27,13 +27,13 @@
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>名字</th>
-                      <th>手机号</th>
-                      <th>角色</th>
-                      <th>状态</th>
-                      <th>更新时间</th>
-                      <th>注册时间</th>
-                      <th>操作</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>UpdateTime</th>
+                      <th>RegistTime</th>
+                      <th>Process</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -54,13 +54,13 @@
                                     data-phone="{{m.phone}}"
                                     data-role_id="{{m.role.id}}"
                                     data-role_name="{{m.role.name}}"
-                                    >编辑</button>
+                                    >Edit</button>
                             {% if m.state == 0 %}
-                              <button type="button" class="btn btn-success btn-valied" data-id="{{m.id}}">通过</button>
+                              <button type="button" class="btn btn-success btn-valied" data-id="{{m.id}}">Valid</button>
                             {% elif m.state == 1 %}
-                              <button type="button" class="btn btn-danger btn-del" data-id="{{m.id}}">删除</button>
+                              <button type="button" class="btn btn-danger btn-del" data-id="{{m.id}}">Delete</button>
                             {% elif m.state == 2 %}
-                              <button type="button" class="btn btn-warning btn-valied" data-id="{{m.id}}">恢复</button>
+                              <button type="button" class="btn btn-warning btn-valied" data-id="{{m.id}}">Recover</button>
                             {% endif %}
                           </td>
                         </tr>
@@ -71,15 +71,15 @@
 
               <div class="row">
                 <div class="col-sm-12 col-md-5">
-                    <div class="dataTables_info">共查到{{pagination.total}}条数据</div>
+                    <div class="dataTables_info">{{pagination.total}} datas found</div>
                 </div>
                 <div class="col-sm-12 col-md-7">
                     <div class="dataTables_paginate paging_simple_numbers" id="dataTable_paginate">
                         <ul class="pagination">
                             {% if pagination.has_prev %}
-                                <li class="paginate_button page-item previous"><a href="/admin/user?page={{pagination.prev_num}}" class="page-link">上一页</a></li>
+                                <li class="paginate_button page-item previous"><a href="/admin/user?page={{pagination.prev_num}}" class="page-link">Previous</a></li>
                             {% else %}
-                                <li class="paginate_button page-item previous disabled"><a href="#" class="page-link">上一页</a></li>
+                                <li class="paginate_button page-item previous disabled"><a href="#" class="page-link">Previous</a></li>
                             {% endif %}
                             {% for page_num in pagination.iter_pages(1,1,3,1) %}
                                 {% if page_num %}
@@ -90,9 +90,9 @@
                                 {% endif %}
                             {% endfor %}
                             {% if pagination.has_next %}
-                                <li class="paginate_button page-item next"><a href="/admin/user?page={{pagination.next_num}}" class="page-link">下一页</a></li>
+                                <li class="paginate_button page-item next"><a href="/admin/user?page={{pagination.next_num}}" class="page-link">Next</a></li>
                             {% else %}
-                                <li class="paginate_button page-item next disabled"><a href="#" class="page-link">下一页</a></li>
+                                <li class="paginate_button page-item next disabled"><a href="#" class="page-link">Next</a></li>
                             {% endif %}
                         </ul>
                     </div>
@@ -109,7 +109,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">编辑用户信息</h5>
+                    <h5 class="modal-title">Edit Profile</h5>
                     <button type="button" class="close" data-dismiss="modal">
                         <span aria-hidden="true">&times;</span><span class="sr-only">close</span>
                     </button>
@@ -117,35 +117,35 @@
                 <div class="modal-body">
                     <form class="form-horizontal" method="post">
                         <div class="form-group col-sm-12">
-                            <label class="control-label">手机号*:</label>
+                            <label class="control-label">Phone*:</label>
                             <input type="text" id="user_phone" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">姓名*:</label>
+                            <label class="control-label">Name*:</label>
                             <input type="text" id="user_name" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">新密码:</label>
+                            <label class="control-label">New Password:</label>
                             <input type="text" id="new_pwd" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">确认密码:</label>
+                            <label class="control-label">Confirm Password:</label>
                             <input type="text" id="confirm_pwd" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">角色*:</label>
+                            <label class="control-label">Role*:</label>
                             <select id="user_role" class="form-control"></select>
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                    <button id="btn_user_save" class="btn btn-success">保存</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id="btn_user_save" class="btn btn-success">Save</button>
                 </div>
             </div>
         </div>
