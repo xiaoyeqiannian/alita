@@ -4,7 +4,6 @@ let select_user_id = 0;
 $(document).ready(function() {
     $('.btn-edit').click(function(e){
         select_user_id = $(this).data('id');
-        $('#user_phone').val($(this).data('phone'));
         $('#user_name').val($(this).data('name'));
         get_roles($(this).data('role_id'));
     })
@@ -23,7 +22,6 @@ $(document).ready(function() {
         }
         var params = {
             "id": select_user_id,
-            "phone": $('#user_phone').val(),
             "name": $('#user_name').val(),
             "pwd": $('#new_pwd').val(),
             "role_id": $('#user_role').val(),

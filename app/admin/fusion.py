@@ -20,18 +20,19 @@ class FManager(Manager):
         return db.session.query(Manager).filter(Manager.id==_id).first()
 
     @classmethod
-    def get_by_phone(cls, phone):
-        return db.session.query(Manager).filter(Manager.phone==phone).first()
+    def get_by_name(cls, name):
+        return db.session.query(Manager).filter(Manager.name==name).first()
 
     @classmethod
     def query(cls, page, per_page, **kwargs):
         q = db.session.query(Manager)# TODO filter superadmin
         if kwargs.get('manager_id'):
             q = q.filter(Manager.id == kwargs.get('manager_id'))
-        if kwargs.get('phone'):
-            q = q.filter(Manager.phone == kwargs.get('phone'))
-        if kwargs.get('name'):
+        if kwargs.get('name') and kwargs.get('name')!='superadmin':
             q = q.filter(Manager.name == kwargs.get('name'))
+        else:
+            q = q.filter(Manager.name != 'superadmin')
+            
         if kwargs.get('state'):
             q = q.filter(Manager.state == kwargs.get('state'))
 
@@ -44,8 +45,6 @@ class FManager(Manager):
         if not c:
             return False, "cann't find this user"
 
-        if kwargs.get('phone'): 
-            c.phone = kwargs.get('phone')
         if kwargs.get('name'):
             c.name = kwargs.get('name')
         if kwargs.get('password'):
@@ -59,9 +58,8 @@ class FManager(Manager):
         return True, ''
 
     @classmethod
-    def add(cls, phone, password, name=""):
+    def add(cls, name, password):
         manager = Manager(
-                    phone = phone,
                     name = name,
                     password = password,
                     state = 0 
@@ -86,20 +84,21 @@ class FRole(Role):
 
     @classmethod
     def name_is_exist(cls, en_name = None, name = None):
-        r = db.session.query(Role).filter(Role.en_name == en_name).all()
+        r = db.session.query(Role).filter(Role.en_name == en_name).first()
         if r:
-            return True
+            return r
         
-        r = db.session.query(Role).filter(Role.name == name).all()
+        r = db.session.query(Role).filter(Role.name == name).first()
         if r:
-            return True
+            return r
 
-        return False
+        return None
 
     @classmethod
     def add(cls, en_name, name, description, routes, permissions):
-        if cls.name_is_exist(en_name, name):
-            return False, 'this name is existed'
+        r = cls.name_is_exist(en_name, name)
+        if r:
+            return False, 'the role is exist'
 
         r = Role()
         r.en_name = en_name
@@ -109,10 +108,11 @@ class FRole(Role):
         db.session.add(r)
         db.session.commit()
 
-        post_permissions = [FPermission.get(_id) for _id in permissions]
-        r.permissions = list(filter(None, post_permissions))
-        db.session.commit()
-        return True, ''
+        if permissions:
+            post_permissions = [FPermission.get(_id) for _id in permissions]
+            r.permissions = list(filter(None, post_permissions))
+            db.session.commit()
+        return True, r
 
     @classmethod
     def delete(cls, _id):
@@ -158,7 +158,7 @@ class FRole(Role):
                 if ap_obj not in binded:
                     binded.append(ap_obj)
             db.session.commit()
-        return True, ''
+        return True, r
 
     @classmethod
     def get_name_ids(cls):
@@ -191,7 +191,7 @@ class FPermission(Permission):
         p.uri = uri
         db.session.add(p)
         db.session.commit()
-        return True, ''
+        return True, p
 
     @classmethod
     def delete(cls, _id):
@@ -201,36 +201,40 @@ class FPermission(Permission):
 
     @classmethod
     def modify(cls, _id, **kwargs):
-        r = cls.get(_id)
-        if not r:
+        p = cls.get(_id)
+        if not p:
             return False, "cann't find this permission"
 
         if kwargs.get('name'):
-            r.name = kwargs.get('name')
+            p.name = kwargs.get('name')
         if kwargs.get('method'):
-            r.method = kwargs.get('method')
+            p.method = kwargs.get('method')
         if kwargs.get('uri'):
-            r.uri = kwargs.get('uri')
-        db.session.add(r)
+            p.uri = kwargs.get('uri')
+        db.session.add(p)
         db.session.commit()
-        return True, ''
+        return True, p
 
 
 class FAdminLog(AdminLog):
     __abstract__ = True
 
     @classmethod
-    def query(cls, page, per_page, start=None, end=None):
-        q = db.session.query(AdminLog).filter(AdminLog.state>0)\
+    def query(cls, mid, page, per_page, start=None, end=None):
+        q = db.session.query(AdminLog)\
+                            .filter(AdminLog.state > 0)\
                             .order_by(AdminLog.id.desc())
+        m = FManager.get(mid)
+        if m.name != 'superadmin':
+            q = q.filter(AdminLog.creator_id == mid)
         if start:
-            q.filter(AdminLog.create_time >= start)
+            q = q.filter(AdminLog.create_time >= start)
         if end:
-            q.filter(AdminLog.create_time < end)
+            q = q.filter(AdminLog.create_time < end)
         return q.paginate(page=page, per_page=per_page, error_out=False)
 
     @classmethod
-    def add(cls, title, info):
-        _log = AdminLog(title = title, info = info)
+    def add(cls, mid, title, info):
+        _log = AdminLog(creator_id = mid, title = title, info = info)
         db.session.add(_log)
         db.session.commit()

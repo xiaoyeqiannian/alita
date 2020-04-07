@@ -3,6 +3,7 @@
 from flask_script import Manager
 from flask_script.commands import Clean, ShowUrls
 import inc
+from util.commands import InitApp
 
 
 def main():
@@ -14,11 +15,13 @@ def main():
     manager.add_command("urls", ShowUrls())
     # clean .pyc .pyo
     manager.add_command("clean", Clean())
+    manager.add_command("init", InitApp())
 
     try:
         manager.run()
     except KeyboardInterrupt:
         print('KeyboardInterrupt cause quit')
+
 
 if __name__ == "__main__":
     main()

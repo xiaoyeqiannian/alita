@@ -1,10 +1,10 @@
 $(function() {
 
-   $("#phone").val('');    
-   $("#password").val('');    
-   $("#regphone").val('');    
-   $("#regpwd").val('');    
-   $("#reregpwd").val('');    
+   $("#name").val('');
+   $("#password").val('');
+   $("#regname").val('');
+   $("#regpwd").val('');
+   $("#reregpwd").val('');
 
    $(".input input").focus(function() {
 
@@ -54,13 +54,13 @@ $(function() {
    })
 
    $("#btn_regist").click(function(e){
-      var phone = $("#regphone").val();
+      var name = $("#regname").val();
       var pwd = $("#regpwd").val();
       var repwd = $("#reregpwd").val();
       if(pwd != repwd){
         alert("两次输入密码不一致！");
       }
-      regist(phone, pwd)
+      regist(name, pwd)
    })
 
    $(".alt-2").click(function() {
@@ -134,9 +134,9 @@ $(function() {
 
 });
 
-function regist(phone, pwd){
+function regist(name, pwd){
     var params = {
-        "phone": phone,
+        "name": name,
         "password": pwd,
     }
     $.post("/admin/regist", params, function(data){

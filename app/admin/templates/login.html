@@ -12,14 +12,14 @@
     <div class="box">
         <form method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="title">sign in</div>
+            <div class="title">Sign in</div>
             <div class="input">
-                <label for="phone">phone</label>
-                <input type="text" name="phone" id="phone">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name">
                 <span class="spin"></span>
             </div>
             <div class="input">
-                <label for="password">password</label>
+                <label for="password">Password</label>
                 <input type="password" name="password" id="password">
                 <span class="spin"></span>
             </div>
@@ -28,7 +28,7 @@
             {% endif %}
             <div type="submit" class="button login">
                 <button>
-                    <span>sign in</span>
+                    <span>Sign In</span>
                     <i class="fa fa-check"></i>
                 </button>
             </div>
@@ -40,25 +40,25 @@
         <div class="material-button alt-2">
             <span class="shape"></span>
         </div>
-        <div class="title">sign up</div>
+        <div class="title">Sign up</div>
         <div class="input">
-            <label for="regphone">phone</label>
-            <input type="text" name="phone" id="regphone">
+            <label for="regname">Name</label>
+            <input type="text" name="name" id="regname">
             <span class="spin"></span>
         </div>
         <div class="input">
-            <label for="regpwd">password</label>
+            <label for="regpwd">Password</label>
             <input type="password" name="password" id="regpwd">
             <span class="spin"></span>
         </div>
         <div class="input">
-            <label for="reregpwd">confirm password</label>
+            <label for="reregpwd">Confirm Password</label>
             <input type="password" name="reregpwd" id="reregpwd">
             <span class="spin"></span>
         </div>
         <div id="btn_regist" class="button">
             <button>
-                <span>sign up</span>
+                <span>Sign Up</span>
             </button>
         </div>
     </div>

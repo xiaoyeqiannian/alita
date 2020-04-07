@@ -31,6 +31,7 @@ def make_excel(name, title, data):
 
 
 def get_user_total_count():
+    # just for test
     return 200
 
 def get_managers(page, per_page):
@@ -39,7 +40,7 @@ def get_managers(page, per_page):
 
 
 def create_manager_excel():
-    header = ['ID', 'name', 'phone', 'role-id', 'role-name', 'state', 'create_time']
+    header = ['ID', 'name', 'role-id', 'role-name', 'state', 'create_time']
     ret = []
     for page in range(1000):
         pagination = FManager.query(page, 20)
@@ -47,7 +48,6 @@ def create_manager_excel():
             ret.append([
                     item.id,
                     item.name,
-                    item.phone,
                     item.role_id,
                     item.role and item.role.name,
                     item.state_cn,
@@ -74,12 +74,12 @@ def modify_manager(_id, **kwargs):
     return FManager.modify(_id, **kwargs)
 
 
-def get_manager_by_phone(phone):
-    return FManager.get_by_phone(phone=phone)
+def get_manager_by_name(name):
+    return FManager.get_by_name(name)
 
 
-def regist_manager(phone, password):
-    return FManager.add(phone, hmac_encrypt(password))
+def regist_manager(name, password):
+    return FManager.add(name, hmac_encrypt(password))
 
 
 def modify_manager_info(_id, **kwargs):
@@ -140,22 +140,23 @@ def modify_permission(_id, **kwargs):
         return FPermission.modify(_id, **kwargs)
 
 
-def get_logs(page, per_page, start, end):
-    pagination = FAdminLog.query(page, per_page, start, end)
+def get_logs(mid, page, per_page, start, end):
+    pagination = FAdminLog.query(mid, page, per_page, start, end)
     return pagination, pagination.items
 
 
-def create_log_excel():
-    header = ['ID', 'title', 'info', 'create_time']
+def create_log_excel(mid):
+    header = ['ID', 'title', 'info', 'create_time', 'creator_id']
     ret = []
     for page in range(1000):
-        pagination = FAdminLog.query(page, 20)
+        pagination = FAdminLog.query(mid, page, 20)
         for item in pagination.items:
             ret.append([
                     item.id,
                     item.title,
                     item.info,
                     date2string(item.create_time),
+                    item.creator_id
                     ])
         if not pagination.has_next:
             break
@@ -163,13 +164,13 @@ def create_log_excel():
     return make_excel("log_list", header, ret)
 
 
-def get_log_download():
-    response = create_log_excel() 
+def get_log_download(mid):
+    response = create_log_excel(mid) 
     response.headers['Content-Type'] = "utf-8"
     response.headers["Cache-Control"] = "no-cache"
     response.headers["Content-Disposition"] = "attachment; filename=log%s.xlsx" % int(time.time())
     return response
 
 
-def add_log(title, info):
-    return FAdminLog.add(title, info)
+def add_log(mid, title, info):
+    return FAdminLog.add(mid, title, info)

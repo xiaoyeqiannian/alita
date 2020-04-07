@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 def login():
     csrf.protect()
     if request.method == 'POST':
-        phone = request.form.get('phone', '')
+        name = request.form.get('name', '')
         password = request.form.get('password', '')
-        if len(phone) == 0 or len(password) == 0:
-            error = 'need phone number and password'
+        if len(name) == 0 or len(password) == 0:
+            error = 'need name and password'
             return render_template('login.html', **locals())
 
-        manager = get_manager_by_phone(phone)
+        manager = get_manager_by_name(name)
         if not manager:
             error = "cann't find this manager"
         elif manager.state <= 0:
@@ -31,7 +31,7 @@ def login():
             error = 'invalid password'
         else:
             login_user(manager)
-            add_log('login', 'manager:%s,phone:%s' % (current_user.id, current_user.phone))
+            add_log(current_user.id, 'login', 'manager:%s,name:%s' % (current_user.id, current_user.name))
             next = request.args.get('next')
             return redirect(next or url_for('admin.admin_index'))
 
@@ -43,7 +43,7 @@ def login():
 @verify_permission
 def logout():
     permission = ''
-    add_log('logout', 'manager:%s,phone:%s' % (current_user.id, current_user.phone))
+    add_log(current_user.id, 'logout', 'manager:%s,name:%s' % (current_user.id, current_user.name))
     logout_user()
     return jsonify(code=RETCODE.OK, data={})
 
@@ -51,20 +51,20 @@ def logout():
 @csrf.exempt
 @mod.route('/regist', methods=['POST'])
 def regist():
-    phone = request.form.get('phone', '')
+    name = request.form.get('name', '')
     password = request.form.get('password', '')
-    if len(phone) == 0 or len(password) == 0:
-        return jsonify(code=RETCODE.PARAMERR, error="need phone number and password")
+    if len(name) == 0 or len(password) == 0:
+        return jsonify(code=RETCODE.PARAMERR, error="need name and password")
 
-    manager = get_manager_by_phone(phone)
+    manager = get_manager_by_name(name)
     if manager:
         return jsonify(code=RETCODE.USERERR, error="this manager is registed")
 
-    manager = regist_manager(phone, password)
+    manager = regist_manager(name, password)
     if not manager:
         return jsonify(code=RETCODE.DATAERR, error="regist fail")
 
-    add_log('regist', 'manager:%s,phone:%s' % (manager.id, manager.phone))
+    add_log(manager.id, 'regist', 'manager:%s,name:%s' % (manager.id, manager.name))
     return jsonify(code=RETCODE.OK, data={})
 
 
@@ -105,16 +105,15 @@ def admin_user():
     permission = '1'
     if request.method == 'POST':
         user_id = request.form.get('id', None, type=int)
-        phone = request.form.get('phone')
         name = request.form.get('name')
         pwd = request.form.get('pwd')
         role_id = request.form.get('role_id', None, type=int)
         state = request.form.get('state', None, type=int)
-        isok, ret = modify_manager(user_id, phone=phone,
-                                            name=name,
-                                            pwd=pwd,
-                                            role_id=role_id,
-                                            state=state)
+        isok, ret = modify_manager(user_id,
+                                    name=name,
+                                    pwd=pwd,
+                                    role_id=role_id,
+                                    state=state)
         if not isok:
             return jsonify(code=RETCODE.USERERR, error=ret)
             
@@ -224,12 +223,13 @@ def permission_selected():
 @verify_permission
 def admin_log():
     permission = '2'
+    mid = current_user.id
     if request.args.get('download'):
-        return get_log_download()
+        return get_log_download(mid)
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     start = request.args.get('start')
     end = request.args.get('end')
-    pagination, logs = get_logs(page, per_page, start, end)
+    pagination, logs = get_logs(mid, page, per_page, start, end)
     return render_template('log.html', **locals())
