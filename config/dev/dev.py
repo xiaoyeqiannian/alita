@@ -38,9 +38,9 @@ SQLALCHEMY_POOL_TIMEOUT = 30
 SQLALCHEMY_MAX_OVERFLOW = 10
 SQLALCHEMY_POOL_RECYCLE = 15
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = 'mysql://alita:password@127.0.0.1:3333/alita?charset=utf8mb4'
+SQLALCHEMY_DATABASE_URI = 'mysql://alita:Alita@123@127.0.0.1:3306/alita?charset=utf8mb4'
 SQLALCHEMY_BINDS = {
-    'alita_admin': 'mysql://alita:password@127.0.0.1:3333/alita_admin?charset=utf8',
+    'alita_admin': 'mysql://alita:Alita@123@127.0.0.1:3306/alita_admin?charset=utf8',
 }
 
 # CACHE
@@ -65,7 +65,7 @@ REDIS = {
     'default': {
         'host': '127.0.0.1',
         'port': 6379,
-        'db': 5,
+        'db': 0,
         'timeout': 3600
     },
 }
