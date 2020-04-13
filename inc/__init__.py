@@ -74,10 +74,6 @@ def create_app(config=None):
     """
     initialize application
     """
-    if False:
-        import traceback
-        traceback.print_stack()
-
     global app, db
 
     app = Flask(__name__)
@@ -85,11 +81,7 @@ def create_app(config=None):
 
     assert config
     # load config path
-    relative_path = os.path.join('..', config)
-    # update config from python file
-    x = app.config.from_pyfile(relative_path, silent=False)
-
-    print("load config %s" % (relative_path))
+    x = app.config.from_pyfile(config, silent=False)
 
     app.config['TEMPLATE_DEBUG'] = True
     app.config['TEMPLATES_AUTO_RELOAD'] = True

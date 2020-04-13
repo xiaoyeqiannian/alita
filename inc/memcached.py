@@ -25,12 +25,9 @@ CACHES = {
 
 > behaviors document
 > http://sendapatch.se/projects/pylibmc/behaviors.html
-
-TODO: use cachelib instead of werkzeug.contrib.cache
-
 """
 import json
-from werkzeug.contrib.cache import MemcachedCache
+from cachelib.memcached import MemcachedCache
 from util.object_dict import ObjectDict
 
 

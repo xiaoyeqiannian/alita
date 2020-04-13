@@ -16,6 +16,16 @@ pip install -r requirements.txt
 # use conda
 conda env create -f alita.yaml
 ```
+
+### 3.start server
+```
+#if use uWsgi
+uwsgi config/dev/uwsgi.ini
+
+#if use gunicorn
+gunicorn -c config/dev/gunicorn.py gunicon_server:application
+```
+
 ## package in common use
 
 + reids  

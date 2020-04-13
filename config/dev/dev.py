@@ -7,7 +7,7 @@ INSTALLED_APPS = [
 ]
 
 # the absolute log path
-LOGPATH = "/home/caokai/alita/log/"
+LOGPATH = "/home/luna/alita/log/"
 
 ################################################
 DEBUG = True
