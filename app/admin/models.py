@@ -1,12 +1,10 @@
-# coding: utf-8
-
 from inc import db
 from sqlalchemy.dialects import mysql
 from sqlalchemy.sql import func
 from flask_login import UserMixin
 from sqlalchemy import (Column, Integer, String, DateTime, Date, ForeignKey,
                         SmallInteger, Text, Float, TEXT)
-
+from . import rc
 
 role2permission = db.Table(
     'role2permission',
@@ -36,6 +34,17 @@ class Manager(db.Model, UserMixin):
     def state_cn(self):
         return ('invalid', 'valid', 'deleted')[self.state]
 
+    @property
+    def alert_count(self):
+        return rc.inc('manager:{}:alert_count'.format(self.id))
+
+    @property
+    def msg_count(self):
+        return rc.inc('manager:{}:msg_count'.format(self.id))
+
+    @classmethod
+    def get(cls, _id):
+        return db.session.query(Manager).filter(Manager.id==_id).first()
 
 class Role(db.Model):
     __bind_key__ = 'alita_admin'

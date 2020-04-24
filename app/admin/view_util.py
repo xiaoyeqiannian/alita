@@ -1,10 +1,7 @@
-# coding: utf-8
-
 from flask import request
 from functools import wraps
 from werkzeug.exceptions import Unauthorized
 from flask_login import current_user, login_required
-from app.admin.fusion import FManager 
 
 def verify_permission(func):
     @login_required

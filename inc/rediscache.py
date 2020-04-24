@@ -14,14 +14,9 @@ REDIS = {
     }
 }
 
-note:
-werkzeug version>1.0.0, the cache model is extracted out to 
-cachelib, but the latesd cachelib have bug
-
-TODO: use cachelib instead of werkzeug.contrib.cache
 """
 
-from werkzeug.contrib.cache import RedisCache
+from cachelib.redis import RedisCache
 
 redis_list = {}
 
