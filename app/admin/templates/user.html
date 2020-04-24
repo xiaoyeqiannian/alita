@@ -17,7 +17,24 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">user list</h6>
+            <form class="row" method="get">
+                <div class="col-sm-5 col-md-9"></div>
+                <div class="col-sm-5 col-md-3 input-group">
+                    {% if name %}
+                        <input type="search" class="form-control form-control-sm" name="name" value="{{name}}" placeholder="姓名" aria-controls="dataTable">
+                    {% else %}
+                        <input type="search" class="form-control form-control-sm" name="name" placeholder="姓名" aria-controls="dataTable">
+                    {% endif %}
+                    <!--<span class="input-group-btn">
+                        <button type="submit" class="btn btn-sm btn-info">!GO</button>
+                    </span>-->
+                    <div class="input-group-append">
+                        <button class="btn btn-sm btn-primary" type="submit">
+                            <i class="fas fa-search fa-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
         <div class="card-body">
           <div class="table-responsive">

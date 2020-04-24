@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import logging
 from . import mod
 from . import proce
@@ -14,10 +12,13 @@ def api_account(account_id):
         return jsonify(code=RETCODE.PARAMERR, error="param invalid")
 
     if request.method == "GET":
-        data = proce.get_account(account_id)
+        data = proce.get_account_jsonify(account_id)
         return jsonify(code=RETCODE.OK, data=data)
 
     elif request.method == "POST":
+        if not request.json.get('phone') and not request.json.get('nickname'):
+            return jsonify(code=RETCODE.PARAMERR, error="param invalid")
+
         isok = proce.modify_account_info(account_id,
                     phone = request.json.get('phone'),
                     nickname = request.json.get('nickname'),

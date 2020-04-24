@@ -19,11 +19,14 @@ conda env create -f alita.yaml
 
 ### 3.start server
 ```
-#if use uWsgi
+# use uWsgi
 uwsgi config/dev/uwsgi.ini
 
-#if use gunicorn
+# use gunicorn
 gunicorn -c config/dev/gunicorn.py gunicon_server:application
+
+# directly
+python cmd.py runserver -p 15000
 ```
 
 ## package in common use

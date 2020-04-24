@@ -1,5 +1,3 @@
-#coding: utf-8
-
 from flask import Blueprint
 from inc import app, rediscache, memcached, logger
 

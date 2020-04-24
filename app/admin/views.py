@@ -1,9 +1,7 @@
-# coding: utf-8
-
 import logging
 from . import mod, csrf
 from flask import jsonify, request, render_template, url_for, redirect
-from flask_login import login_user, logout_user, current_user
+from flask_login import logout_user, current_user
 from app.admin.proce import *
 from inc.retcode import RETCODE
 from wtforms import Form
@@ -22,16 +20,8 @@ def login():
             error = 'need name and password'
             return render_template('login.html', **locals())
 
-        manager = get_manager_by_name(name)
-        if not manager:
-            error = "cann't find this manager"
-        elif manager.state <= 0:
-            error = 'invalid manager'
-        elif hmac_encrypt(password) != manager.password.encode('utf8'):
-            error = 'invalid password'
-        else:
-            login_user(manager)
-            add_log(current_user.id, 'login', 'manager:%s,name:%s' % (current_user.id, current_user.name))
+        isok, error = manager_login(name, password)
+        if isok:
             next = request.args.get('next')
             return redirect(next or url_for('admin.admin_index'))
 
@@ -99,6 +89,16 @@ def source_list():
     return jsonify(code=RETCODE.OK, data=data) 
 
 
+@mod.route('/visit/message/list')
+@verify_permission
+def message_list():
+    permission = ''
+    # just for test
+    data = {'alerts': ['wechat', 'weibo', 'baidu'],
+            'messages': [1,2,3]}
+    return jsonify(code=RETCODE.OK, data=data) 
+
+
 @mod.route('/user', methods=['GET', 'POST'])
 @verify_permission
 def admin_user():
@@ -124,7 +124,8 @@ def admin_user():
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    pagination, managers = get_managers(page, per_page)
+    name = request.args.get('name')
+    pagination, managers = get_managers(page, per_page, name=name)
     return render_template('user.html', **locals())
 
 
