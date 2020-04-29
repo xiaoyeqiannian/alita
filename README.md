@@ -29,7 +29,7 @@ gunicorn -c config/dev/gunicorn.py gunicon_server:application
 python cmd.py runserver -p 15000
 ```
 
-## package in common use
+## Feature
 
 + reids  
 + memcache  

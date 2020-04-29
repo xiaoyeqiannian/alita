@@ -1449,3 +1449,7 @@ body.sidebar-toggled footer.sticky-footer {
 .select2-container--default .select2-selection--multiple {
     border: 1px solid #ced4da;
 }
+
+.language_icon {
+    width: 30px;
+}

@@ -22,13 +22,7 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.init_app(app=app)
 login_manager.login_view = "admin.login"
-"""
-@login_manager.user_loader
-def load_user(user_id):
-    from app.admin.models import Manager
-    manager = Manager.get(user_id)
-    return manager
-"""
+
 @app.after_request
 def after_request(response):
     csrf_token = generate_csrf()

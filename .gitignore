@@ -17,10 +17,12 @@ develop-eggs
 .installed.cfg
 lib64
 .idea
+messages.pot
 logs
 # Installer logs
 pip-log.txt
-
+# babel translations
+translations/
 # Unit test / coverage reports
 .coverage
 .tox

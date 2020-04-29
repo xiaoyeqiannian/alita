@@ -4,14 +4,14 @@
     <link href="https://cdn.bootcss.com/datatables/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet">
 {% endblock %}
 
-{% block title %}users{% endblock %}
+{% block title %}{{ _('users') }}{% endblock %}
 
 {% block page %}
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">User Manager</h1>
+        <h1 class="h3 mb-0 text-gray-800">{{ _('User Manager') }}</h1>
         <a class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" target="view_window" href="/admin/user?download=true">
             <i class="fas fa-download fa-sm text-white-50"></i>
-            Export 
+            {{ _('Export') }}
         </a>
     </div>
 
@@ -21,9 +21,9 @@
                 <div class="col-sm-5 col-md-9"></div>
                 <div class="col-sm-5 col-md-3 input-group">
                     {% if name %}
-                        <input type="search" class="form-control form-control-sm" name="name" value="{{name}}" placeholder="姓名" aria-controls="dataTable">
+                    <input type="search" class="form-control form-control-sm" name="name" value="{{name}}" placeholder="{{ _('name') }}" aria-controls="dataTable">
                     {% else %}
-                        <input type="search" class="form-control form-control-sm" name="name" placeholder="姓名" aria-controls="dataTable">
+                    <input type="search" class="form-control form-control-sm" name="name" placeholder="{{ _('name') }}" aria-controls="dataTable">
                     {% endif %}
                     <!--<span class="input-group-btn">
                         <button type="submit" class="btn btn-sm btn-info">!GO</button>
@@ -44,12 +44,12 @@
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Name</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>UpdateTime</th>
-                      <th>RegistTime</th>
-                      <th>Process</th>
+                      <th>{{ _('Name') }}</th>
+                      <th>{{ _('Role') }}</th>
+                      <th>{{ _('Status') }}</th>
+                      <th>{{ _('UpdateTime') }}</th>
+                      <th>{{ _('RegistTime') }}</th>
+                      <th>{{ _('Process') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -70,11 +70,11 @@
                                     data-role_name="{{m.role.name}}"
                                     >Edit</button>
                             {% if m.state == 0 %}
-                              <button type="button" class="btn btn-success btn-valied" data-id="{{m.id}}">Valid</button>
+                            <button type="button" class="btn btn-success btn-valied" data-id="{{m.id}}">{{ _('Valid') }}</button>
                             {% elif m.state == 1 %}
-                              <button type="button" class="btn btn-danger btn-del" data-id="{{m.id}}">Delete</button>
+                            <button type="button" class="btn btn-danger btn-del" data-id="{{m.id}}">{{ _('Delete') }}</button>
                             {% elif m.state == 2 %}
-                              <button type="button" class="btn btn-warning btn-valied" data-id="{{m.id}}">Recover</button>
+                            <button type="button" class="btn btn-warning btn-valied" data-id="{{m.id}}">{{ _('Recover') }}</button>
                             {% endif %}
                           </td>
                         </tr>
@@ -91,9 +91,9 @@
                     <div class="dataTables_paginate paging_simple_numbers" id="dataTable_paginate">
                         <ul class="pagination">
                             {% if pagination.has_prev %}
-                                <li class="paginate_button page-item previous"><a href="/admin/user?page={{pagination.prev_num}}" class="page-link">Previous</a></li>
+                            <li class="paginate_button page-item previous"><a href="/admin/user?page={{pagination.prev_num}}" class="page-link">{{ _('Previous') }}</a></li>
                             {% else %}
-                                <li class="paginate_button page-item previous disabled"><a href="#" class="page-link">Previous</a></li>
+                            <li class="paginate_button page-item previous disabled"><a href="#" class="page-link">{{ _('Previous') }}</a></li>
                             {% endif %}
                             {% for page_num in pagination.iter_pages(1,1,3,1) %}
                                 {% if page_num %}
@@ -104,9 +104,9 @@
                                 {% endif %}
                             {% endfor %}
                             {% if pagination.has_next %}
-                                <li class="paginate_button page-item next"><a href="/admin/user?page={{pagination.next_num}}" class="page-link">Next</a></li>
+                            <li class="paginate_button page-item next"><a href="/admin/user?page={{pagination.next_num}}" class="page-link">{{ _('Next') }}</a></li>
                             {% else %}
-                                <li class="paginate_button page-item next disabled"><a href="#" class="page-link">Next</a></li>
+                            <li class="paginate_button page-item next disabled"><a href="#" class="page-link">{{ _('Next') }}</a></li>
                             {% endif %}
                         </ul>
                     </div>
@@ -123,7 +123,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Profile</h5>
+                    <h5 class="modal-title">{{ _('Edit Profile') }}</h5>
                     <button type="button" class="close" data-dismiss="modal">
                         <span aria-hidden="true">&times;</span><span class="sr-only">close</span>
                     </button>
@@ -131,30 +131,30 @@
                 <div class="modal-body">
                     <form class="form-horizontal" method="post">
                         <div class="form-group col-sm-12">
-                            <label class="control-label">Name*:</label>
+                            <label class="control-label">{{ _('Name') }}*:</label>
                             <input type="text" id="user_name" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">New Password:</label>
+                            <label class="control-label">{{ _('New Password') }}:</label>
                             <input type="text" id="new_pwd" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">Confirm Password:</label>
+                            <label class="control-label">{{ _('Confirm Password') }}:</label>
                             <input type="text" id="confirm_pwd" class="form-control">
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                         <div class="form-group col-sm-12">
-                            <label class="control-label">Role*:</label>
+                            <label class="control-label">{{ _('Role') }}*:</label>
                             <select id="user_role" class="form-control"></select>
                         </div>
                         <div class="line line-dashed line-lg pull-in"></div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button id="btn_user_save" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button id="btn_user_save" class="btn btn-success">{{ _('Save') }}</button>
                 </div>
             </div>
         </div>

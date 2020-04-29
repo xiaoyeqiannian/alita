@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>SIGN IN</title>
+<title>{{ _('SIGN IN') }}</title>
 
 <link rel="stylesheet" href="{{ url_for('admin.static', filename='css/login.css') }}">
 </head>
@@ -12,14 +12,14 @@
     <div class="box">
         <form method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="title">Sign in</div>
+            <div class="title">{{ _('Sign in') }}</div>
             <div class="input">
-                <label for="name">Name</label>
+                <label for="name">{{ _('Name') }}</label>
                 <input type="text" name="name" id="name">
                 <span class="spin"></span>
             </div>
             <div class="input">
-                <label for="password">Password</label>
+                <label for="password">{{ _('Password') }}</label>
                 <input type="password" name="password" id="password">
                 <span class="spin"></span>
             </div>
@@ -28,11 +28,11 @@
             {% endif %}
             <div type="submit" class="button login">
                 <button>
-                    <span>Sign In</span>
+                    <span>{{ _('Sign In') }}</span>
                     <i class="fa fa-check"></i>
                 </button>
             </div>
-            <a href="javascript:" class="pass-forgot">forget password？</a>
+            <a href="javascript:" class="pass-forgot">{{ _('forget password?') }}</a>
         </form>
     </div>
 
@@ -58,7 +58,7 @@
         </div>
         <div id="btn_regist" class="button">
             <button>
-                <span>Sign Up</span>
+                <span>{{ _('Sign Up') }}</span>
             </button>
         </div>
     </div>
