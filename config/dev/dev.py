@@ -1,5 +1,3 @@
-#coding: utf-8
-
 # the apps for loading
 INSTALLED_APPS = [
     'app.api',
@@ -13,8 +11,8 @@ LOGPATH = "/home/luna/alita/log/"
 DEBUG = True
 TEMPLATE_DEBUG = True
 EXPLAIN_TEMPLATE_LOADING = False
-#
-# ################################################
+TEMPLATES_AUTO_RELOAD=True
+#################################################
 
 # Flask-Security features
 SECURITY_REGISTERABLE = False
@@ -22,6 +20,12 @@ SECURITY_SEND_REGISTER_EMAIL = False
 
 # SESSION
 SESSION_COOKIE_NAME = '_sa'
+
+# babel
+BABEL_DEFAULT_LOCALE='en'
+BABEL_DEFAULT_TIMEZONE='UTC'
+BABEL_TRANSLATION_DIRECTORIES='/home/luna/alita/config/dev/translations'
+LANGUAGE = ['zh', 'en', 'fr']
 
 # login
 SECRET_KEY = "alita666666"

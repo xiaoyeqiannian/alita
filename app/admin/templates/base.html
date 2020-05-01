@@ -24,7 +24,7 @@
 
               <!-- Sidebar - Brand -->
               <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
-                <div class="sidebar-brand-text mx-3">Admin</div>
+                  <div class="sidebar-brand-text mx-3">{{_('Admin')}}</div>
               </a>
 
               <!-- Divider -->
@@ -34,7 +34,7 @@
               <li class="nav-item active">
                 <a class="nav-link" href="index">
                   <i class="fas fa-fw fa-tachometer-alt"></i>
-                  <span>Dashboard</span></a>
+                  <span>{{_('Dashboard')}}</span></a>
               </li>
 
               <!-- Divider -->
@@ -46,25 +46,25 @@
                     or 'permission' in current_user.routes
               %}
               <div class="sidebar-heading">
-                operation
+                  {{ _('operation') }}
               </div>
 
               <!-- Nav Item -->
               <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
                   <i class="fas fa-fw fa-cog"></i>
-                  <span>Organization</span>
+                  <span>{{ _('Organization') }}</span>
                 </a>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                   <div class="bg-white py-2 collapse-inner rounded">
                     {% if current_user.role.en_name=='superadmin' or 'user' in current_user.routes %}
-                    <a class="collapse-item" href="user">User</a>
+                    <a class="collapse-item" href="user">{{ _('User') }}</a>
                     {% endif %}
                     {% if current_user.role.en_name=='superadmin' or 'role' in current_user.routes %}
-                    <a class="collapse-item" href="role">Role</a>
+                    <a class="collapse-item" href="role">{{ _('Role') }}</a>
                     {% endif %}
                     {% if current_user.role.en_name=='superadmin' or 'permission' in current_user.routes %}
-                    <a class="collapse-item" href="permission">Permission</a>
+                    <a class="collapse-item" href="permission">{{ _('Permission') }}</a>
                     {% endif %}
                   </div>
                 </div>
@@ -76,13 +76,13 @@
               <!-- Heading -->
               {% if current_user.role.en_name=='superadmin' or 'log' in current_user.routes %}
               <div class="sidebar-heading">
-                Maintenance
+                  {{ _('Maintenance') }}
               </div>
 
               <li class="nav-item">
                 <a class="nav-link" href="log">
                   <i class="fas fa-fw fa-table"></i>
-                  <span>Logging</span></a>
+                  <span>{{ _('Logging') }}</span></a>
               </li>
               <!-- Divider -->
               <hr class="sidebar-divider d-none d-md-block">
@@ -107,59 +107,47 @@
 
                   <!-- Topbar Navbar -->
                   <ul class="navbar-nav ml-auto">
+                    
+                    <li class="nav-item row">
+                      <a class="nav-link" href="#">
+                        <img class="language_icon" data-language="zh" src="http://pic.lunapage.cn/language_icon_zh.png"></img>
+                      </a>
+                      <a class="nav-link" href="#">
+                        <img class="language_icon" data-language="en" src="http://pic.lunapage.cn/language_icon_en.png"></img>
+                      </a>
+                    </li>
 
                     <!-- Nav Item - Alerts -->
                     <li class="nav-item dropdown no-arrow mx-1">
                       <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-bell fa-fw"></i>
-                        <!-- Counter - Alerts -->
-                        <span class="badge badge-danger badge-counter">{{ current_user.alert_count }}</span>
+                        {% if current_user.alerts %}
+                        <span class="badge badge-danger badge-counter">{{ current_user.alerts | length }}</span>
+                        {% endif %}
                       </a>
                       <!-- Dropdown - Alerts -->
+                      {% if current_user.alerts %}
                       <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
                         <h6 class="dropdown-header">
-                          Alert
+                            {{ _('Alert') }}
                         </h6>
+                        {% for item in current_user.alerts %}
                         <a class="dropdown-item d-flex align-items-center" href="#">
                           <div class="mr-3">
-                            <div class="icon-circle bg-success">
-                              <i class="fas fa-donate text-white"></i>
+                            <div class="icon-circle bg-warning">
+                              <i class="fas fa-exclamation-triangle text-white"></i>
                             </div>
                           </div>
                           <div>
-                            <div class="small text-gray-500">December 7, 2019</div>
-                            just for test
+                            <div class="small text-gray-500">{{ item.create_time_cn }}</div>{{ item.content }}
                           </div>
                         </a>
-                        <a class="dropdown-item text-center small text-gray-500" href="#">more</a>
+                        {% endfor %}
+                        <!--<a class="dropdown-item text-center small text-gray-500" href="#">more</a>-->
                       </div>
+                      {% endif %}
                     </li>
 
-                    <!-- Nav Item - Messages -->
-                    <li class="nav-item dropdown no-arrow mx-1">
-                      <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-envelope fa-fw"></i>
-                        <!-- Counter - Messages -->
-                        <span class="badge badge-danger badge-counter">{{ current_user.msg_count }}</span>
-                      </a>
-                      <!-- Dropdown - Messages -->
-                      <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
-                        <h6 class="dropdown-header">
-                          Message
-                        </h6>
-                        <a class="dropdown-item d-flex align-items-center" href="#">
-                          <div class="dropdown-list-image mr-3">
-                              <img class="rounded-circle" src="http://pic.lunapage.cn/default_user.png" alt="">
-                            <div class="status-indicator bg-success"></div>
-                          </div>
-                          <div>
-                            <div class="text-truncate">Am I a good boy? The reason I ask is because someone told me that...</div>
-                            <div class="small text-gray-500">Chicken the Dog · 2w</div>
-                          </div>
-                        </a>
-                        <a class="dropdown-item text-center small text-gray-500" href="#">more</a>
-                      </div>
-                    </li>
 
                     <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -167,14 +155,10 @@
                     <li class="nav-item dropdown no-arrow">
                       <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ current_user.name }}</span>
-                        <img class="img-profile rounded-circle" src="http://pic.lunapage.cn/default_user.png">
+                        <img class="img-profile rounded-circle" src="{{ current_user.avatar or 'http://pic.lunapage.cn/default_user.png' }}">
                       </a>
                       <!-- Dropdown - User Information -->
                       <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                        <a class="dropdown-item" href="#">
-                          <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                          Profile
-                        </a>
                         <a class="dropdown-item" href="#">
                           <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                           Setting
@@ -224,15 +208,15 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Logout?</h5>
+            <h5 class="modal-title" id="exampleModalLabel">{{ _('Logout?') }}</h5>
           <button class="close" type="button" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
         </div>
         <div class="modal-body">Logout will clean session</div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-          <a id="logout" class="btn btn-primary" href="login">Yes</a>
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">{{ _('Cancel') }}</button>
+            <a id="logout" class="btn btn-primary" href="login">{{ _('Yes') }}</a>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import logging
 from . import mod, csrf
-from flask import jsonify, request, render_template, url_for, redirect
+from flask import jsonify, request, render_template, url_for, redirect, make_response
 from flask_login import logout_user, current_user
 from app.admin.proce import *
 from inc.retcode import RETCODE
@@ -234,3 +234,14 @@ def admin_log():
     end = request.args.get('end')
     pagination, logs = get_logs(mid, page, per_page, start, end)
     return render_template('log.html', **locals())
+
+
+@mod.route('/change/language', methods=['POST'])
+@verify_permission
+def change_language():
+    permission = ''
+    language = request.form.get('language')
+    response=make_response('success');  
+    response.set_cookie('language',language)  
+    modify_manager(current_user.id, language=language)
+    return response 

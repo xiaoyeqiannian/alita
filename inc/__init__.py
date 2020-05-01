@@ -4,13 +4,14 @@ import os
 import sys
 import importlib
 import jinja2
-from flask import Flask, g
+from flask import Flask, g, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_babel import Babel
 
 
 app = None
 db = None
-
+babel = None
 
 def install_models(app_names):
     '''
@@ -64,8 +65,9 @@ def install():
         _import_custom_models(library_views)
 
 
-def per_request_callbacks(resp):
+def after_request_callbacks(resp):
     for func in getattr(g, 'call_after_request', ()):
+        print('after', func)
         resp = func(resp)
     return resp
 
@@ -74,7 +76,7 @@ def create_app(config=None):
     """
     initialize application
     """
-    global app, db
+    global app, db, babel
 
     app = Flask(__name__)
     print("create app(%s) id:%s" % (__name__, id(app)))
@@ -83,10 +85,23 @@ def create_app(config=None):
     # load config path
     x = app.config.from_pyfile(config, silent=False)
 
-    app.config['TEMPLATE_DEBUG'] = True
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
+
+    babel = Babel(app)
+    @babel.localeselector
+    def get_locale():
+        language = request.cookies.get('language')
+        if language:
+            return language
+
+        return request.accept_languages.best_match(app.config.get('LANGUAGE', 'zh'))
+
+    @babel.timezoneselector
+    def get_timezone():
+        timezone = request.cookies.get('timezone')
+        if timezone:
+            return timezone
 
     db = SQLAlchemy(app)
     print("create db id:%s via %r" % (id(db), SQLAlchemy))
@@ -98,5 +113,5 @@ def create_app(config=None):
 
     install()
 
-    app.after_request(per_request_callbacks)
+    app.after_request(after_request_callbacks)
     return app

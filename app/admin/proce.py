@@ -96,6 +96,10 @@ def modify_manager(_id, **kwargs):
         c.state = kwargs.get('state')
     if kwargs.get('role_id'):
         c.role_id = kwargs.get('role_id')
+    if kwargs.get('language'):
+        c.language = kwargs.get('language')
+    if kwargs.get('avatar'):
+        c.avatar = kwargs.get('avatar')
     db.session.add(c)
     db.session.commit()
     return True, '' 

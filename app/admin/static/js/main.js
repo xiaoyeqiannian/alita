@@ -48,6 +48,13 @@
 
   $("#logout").click(function(e){
     $.post("/admin/logout", {}, function(data){});
-  })
+  });
+
+  $(".language_icon").click(function(e){
+    $.post("/admin/change/language", {language: $(this).data('language')}, function(data){
+        console.log(document.cookie)
+        window.location.reload();
+    });
+  });
 
 })(jQuery); // End of use strict
