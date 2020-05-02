@@ -7,7 +7,6 @@ class InitApp(flask_script.Command):
 
     def run(self):
         from app.admin.proce import modify_manager, regist_manager, modify_role, modify_permission, get_manager_by_name
-        from app.admin.fusion import FRole
 
         m = get_manager_by_name('superadmin')
         if not m:
@@ -28,10 +27,10 @@ class InitApp(flask_script.Command):
         if isok:
             pids.append(p.id)
 
-        r = FRole.name_is_exist(en_name='superadmin', name='superadmin')
-        if not r:
-            isok, r = modify_role(None, en_name='superadmin', name='superadmin', description=None, routes=None, permissions=None)
+        isok, r = modify_role(None, en_name='superadmin', name='superadmin', description=None, routes=None, permissions=None)
         print(r)
-        modify_manager(m.id, state=1, role_id=r.id)
-
+        if isok:
+            modify_manager(m.id, state=1, role_id=r.id)
+        else:
+            print('edit role error')
         return True
