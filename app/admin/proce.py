@@ -112,7 +112,7 @@ def get_manager_by_name(name):
 def regist_manager(name, password):
     manager = Manager(
                 name = name,
-                password = password,
+                password = generate_password_hash(password),
                 state = 0
     )
     db.session.add(manager)
