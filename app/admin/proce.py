@@ -57,11 +57,7 @@ def get_manager_download():
         if not pagination.has_next:
             break
 
-    response = make_excel_online("user_list", header, ret)
-    response.headers['Content-Type'] = "utf-8"
-    response.headers["Cache-Control"] = "no-cache"
-    response.headers["Content-Disposition"] = "attachment; filename=user%s.xlsx" % int(time.time())
-    return response 
+    return make_excel_online("user_list", header, ret)
 
 
 def manager_login(name, password):
@@ -310,11 +306,7 @@ def get_log_download(mid):
         if not pagination.has_next:
             break
 
-    response = make_excel_online("log_list", header, ret)
-    response.headers['Content-Type'] = "utf-8"
-    response.headers["Cache-Control"] = "no-cache"
-    response.headers["Content-Disposition"] = "attachment; filename=log%s.xlsx" % int(time.time())
-    return response
+    return make_excel_online("log_list", header, ret)
 
 
 def add_log(mid, title, info):

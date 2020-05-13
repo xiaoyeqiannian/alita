@@ -1,5 +1,5 @@
 bind = '127.0.0.1:15000'
-debug = False
+debug = True
 daemon = False
 loglevel = 'error'
 workers = 2

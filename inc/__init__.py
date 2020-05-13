@@ -91,11 +91,11 @@ def create_app(config=None):
     babel = Babel(app)
     @babel.localeselector
     def get_locale():
-        language = request.cookies.get('language')
+        language = request.cookies.get('_LOCALE_')
         if language:
             return language
 
-        return request.accept_languages.best_match(app.config.get('LANGUAGE', 'zh'))
+        return request.accept_languages.best_match(app.config.get('LANGUAGE', 'zh_Hans'))
 
     @babel.timezoneselector
     def get_timezone():

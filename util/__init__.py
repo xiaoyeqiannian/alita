@@ -1,4 +1,5 @@
 import re
+import time
 import xlsxwriter
 from io import BytesIO
 from flask import make_response
@@ -6,6 +7,7 @@ from flask import make_response
 def make_excel_online(name, title, data):
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    # 去除sheet名字中的特殊字符，否则保存失败
     p = re.compile(r'[/\?:：\*\[\]]')
     name = re.sub(p,"",name)
     worksheet = workbook.add_worksheet(name)
@@ -15,4 +17,7 @@ def make_excel_online(name, title, data):
     workbook.close()
     response = make_response(output.getvalue())
     output.close()
+    response.headers['Content-Type'] = "utf-8"
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Content-Disposition"] = "attachment; filename=%s.xlsx" % int(time.time())
     return response
