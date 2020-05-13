@@ -22,10 +22,10 @@ SECURITY_SEND_REGISTER_EMAIL = False
 SESSION_COOKIE_NAME = '_sa'
 
 # babel
-BABEL_DEFAULT_LOCALE='en'
+BABEL_DEFAULT_LOCALE='zh_Hans'
 BABEL_DEFAULT_TIMEZONE='UTC'
 BABEL_TRANSLATION_DIRECTORIES='/home/luna/alita/config/dev/translations'
-LANGUAGE = ['zh', 'en', 'fr']
+LANGUAGE = ['zh_Hans', 'en', 'fr']
 
 # login
 SECRET_KEY = "alita666666"

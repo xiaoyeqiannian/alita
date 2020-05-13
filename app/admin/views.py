@@ -241,7 +241,7 @@ def admin_log():
 def change_language():
     permission = ''
     language = request.form.get('language')
-    response=make_response('success');  
-    response.set_cookie('language',language)  
+    response=make_response('success')
+    response.set_cookie('_LOCALE_', language)
     modify_manager(current_user.id, language=language)
     return response 
