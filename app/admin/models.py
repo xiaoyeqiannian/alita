@@ -23,7 +23,7 @@ class Manager(db.Model, UserMixin):
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     name = Column("name", String(32), unique=True, nullable=False, doc=u"")
     password = Column("password", String(128), nullable=True, doc=u"")
-    language = Column("language", String(6), nullable=True, doc="浏览页面使用的语言")
+    language = Column("language", String(10), nullable=True, doc="浏览页面使用的语言")
     avatar = Column("avatar", String(256), nullable=True, doc="头像")
     update_time = Column("update_time", DateTime, default=func.now(), onupdate=func.now())
     create_time = Column("create_time", DateTime, default=func.now())

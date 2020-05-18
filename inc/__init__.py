@@ -94,8 +94,8 @@ def create_app(config=None):
         language = request.cookies.get('_LOCALE_')
         if language:
             return language
-
-        return request.accept_languages.best_match(app.config.get('LANGUAGE', 'zh_Hans'))
+    
+        return app.config.get('BABEL_DEFAULT_LOCALE')
 
     @babel.timezoneselector
     def get_timezone():
