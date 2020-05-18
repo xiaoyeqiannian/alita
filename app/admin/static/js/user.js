@@ -29,9 +29,6 @@ $(document).ready(function() {
         save_user_info(params);
     })
 
-    $('#download_user_list').click(function(e){
-        download_users_info();
-    })
 });
 
 function get_roles(role_id){
@@ -65,19 +62,6 @@ function save_user_info(params){
         if (data.code == '0000') {
             alert("操作成功");
             window.location.reload();
-        } else {
-            alert(data.error);
-        }
-    });
-}
-
-function download_users_info(){
-    $.get("/admin/user", {'download': true}, function(data){
-        if (typeof data === 'string') {
-            data = JSON.parse(data);
-        }
-        if (data.code == '0000') {
-            
         } else {
             alert(data.error);
         }
