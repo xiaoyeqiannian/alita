@@ -8,7 +8,7 @@ def main():
     # create application
     manager = Manager(inc.create_app)
     # add config, default by dev/dev.py
-    manager.add_option('-c', '--config', dest='config', required=False, default='../config/dev/dev.py')
+    manager.add_option('-c', '--config', dest='config', required=False, default='../config/alita/prod.py')
     # show the application's url routes
     manager.add_command("urls", ShowUrls())
     # clean .pyc .pyo

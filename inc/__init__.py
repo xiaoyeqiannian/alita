@@ -85,24 +85,11 @@ def create_app(config=None):
     # load config path
     x = app.config.from_pyfile(config, silent=False)
 
+    # 去掉jinjia2模板中的空白行
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
-    babel = Babel(app)
-    @babel.localeselector
-    def get_locale():
-        language = request.cookies.get('_LOCALE_')
-        if language:
-            return language
-    
-        return app.config.get('BABEL_DEFAULT_LOCALE')
-
-    @babel.timezoneselector
-    def get_timezone():
-        timezone = request.cookies.get('timezone')
-        if timezone:
-            return timezone
-
+    # --------- DB -----------------
     db = SQLAlchemy(app)
     print("create db id:%s via %r" % (id(db), SQLAlchemy))
 
@@ -110,6 +97,26 @@ def create_app(config=None):
 
     assert db
     db.create_all()
+
+
+    # --------- Babel ------------
+    if app.config.get('BABEL_TRANSLATION_DIRECTORIES') and app.config.get('BABEL_DEFAULT_LOCALE'):
+        print('init Babel')
+        babel = Babel(app)
+        @babel.localeselector
+        def get_locale():
+            language = request.cookies.get('_LOCALE_')
+            if language:
+                return language
+        
+            return app.config.get('BABEL_DEFAULT_LOCALE')
+
+        @babel.timezoneselector
+        def get_timezone():
+            timezone = request.cookies.get('timezone')
+            if timezone:
+                return timezone
+
 
     install()
 

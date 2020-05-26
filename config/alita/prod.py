@@ -1,3 +1,8 @@
+import os
+import sys
+HOME = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(HOME)
+
 # the apps for loading
 INSTALLED_APPS = [
     'app.api',
@@ -5,7 +10,7 @@ INSTALLED_APPS = [
 ]
 
 # the absolute log path
-LOGPATH = "/home/luna/alita/log/"
+LOGPATH = ""
 
 ################################################
 DEBUG = True
@@ -24,8 +29,7 @@ SESSION_COOKIE_NAME = '_sa'
 # babel
 BABEL_DEFAULT_LOCALE='zh_Hans'
 BABEL_DEFAULT_TIMEZONE='UTC'
-BABEL_TRANSLATION_DIRECTORIES='/home/luna/alita/config/dev/translations'
-LANGUAGE = ['zh_Hans', 'en', 'fr']
+BABEL_TRANSLATION_DIRECTORIES='*/translations'
 
 # login
 SECRET_KEY = "alita666666"
@@ -42,9 +46,9 @@ SQLALCHEMY_POOL_TIMEOUT = 30
 SQLALCHEMY_MAX_OVERFLOW = 10
 SQLALCHEMY_POOL_RECYCLE = 15
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = 'mysql://alita:Alita@123@127.0.0.1:3306/alita?charset=utf8mb4'
+SQLALCHEMY_DATABASE_URI = 'mysql://user:password@127.0.0.1:3306/alita?charset=utf8mb4'
 SQLALCHEMY_BINDS = {
-    'alita_admin': 'mysql://alita:Alita@123@127.0.0.1:3306/alita_admin?charset=utf8',
+    'alita_admin': 'mysql://user:password@127.0.0.1:3306/alita_admin?charset=utf8',
 }
 
 # CACHE
@@ -73,3 +77,8 @@ REDIS = {
         'timeout': 3600
     },
 }
+try:
+    # load local config instead of this config file
+    from local_config import *
+except ImportError:
+    pass

@@ -16,7 +16,7 @@ class WeChatOAuth(object):
         return results
 
 
-class WeChatCloudDBApi(object):
+class WeChatCloudDB(object):
     """
     微信小程序云开发相关接口
     https://developers.weixin.qq.com/miniprogram/dev/wxcloud/reference-http-api/
@@ -91,50 +91,49 @@ class WeChatCloudDBApi(object):
             self.query += '.where({%s})' % filter_str
         return self
    
-    def update(self, table, _id, **kwargs):# TODO where and func
+    def update_one(self, table, _id, **kwargs):
         self.method = 'update'
         self.url = 'https://api.weixin.qq.com/tcb/databaseupdate'
         self.query = 'db.collection("{0}").doc("{1}")'.format(table, _id)
         if kwargs:
-            filter_str = ''
+            filter_list = []
             for k,v in kwargs.items():
                 if isinstance(v, str):
-                    filter_str += '{0}:"{1}"'.format(k, v)
+                    filter_list.append('{0}:"{1}"'.format(k, v))
                 elif isinstance(v, bool):
-                    filter_str += '{0}:{1}'.format(k, v and 'true' or 'false')
+                    filter_list.append('{0}:{1}'.format(k, v and 'true' or 'false'))
                 else:
-                    filter_str += '{0}:{1}'.format(k, v)
-
+                    filter_list.append('{0}:{1}'.format(k, v))
+            filter_str = ','.join(filter_list)
             self.query += '.update({data:{%s}})' % filter_str
         return self
     
-    def delete(self, table, _id):# TODO test
+    def delete_one(self, table, _id):
         self.method = 'delete'
-        url = 'https://api.weixin.qq.com/tcb/databasedelete'
+        self.url = 'https://api.weixin.qq.com/tcb/databasedelete'
         self.query = 'db.collection("{0}").doc("{1}").remove()'.format(table, _id)
         return self
 
-    def add(self, table, **kwargs):
+    def add_one(self, table, **kwargs):
         self.method = 'add'
-        url = 'https://api.weixin.qq.com/tcb/databaseadd'
+        self.url = 'https://api.weixin.qq.com/tcb/databaseadd'
         self.query = 'db.collection("{}")'.format(table)
         if kwargs:
-            filter_str = ''
+            filter_list = []
             for k,v in kwargs.items():
                 if isinstance(v, str):
-                    filter_str += '{0}:"{1}"'.format(k, v)
+                    filter_list.append('{0}:"{1}"'.format(k, v))
                 elif isinstance(v, bool):
-                    filter_str += '{0}:{1}'.format(k, v and 'true' or 'false')
+                    filter_list.append('{0}:{1}'.format(k, v and 'true' or 'false'))
                 else:
-                    filter_str += '{0}:{1}'.format(k, v)
-
+                    filter_list.append('{0}:{1}'.format(k, v))
+            filter_str = ','.join(filter_list)
             self.query += '.add({data:[{%s}]})' % filter_str
-        
         return self 
     
-    def count(self, access_token, env, query):
+    def count(self, table, **kwargs):
         self.method = 'count'
-        url = 'https://api.weixin.qq.com/tcb/databasecount'
+        self.url = 'https://api.weixin.qq.com/tcb/databasecount'
         self.query = 'db.collection("{}")'.format(table)
         if kwargs:
             filter_str = ''
@@ -151,7 +150,7 @@ class WeChatCloudDBApi(object):
         return self
 
 
-class WeChatCloudFApi(object):
+class WeChatCloudFile(object):
     @classmethod
     def db_file_upload(cls, access_token, env, path):
         url = 'https://api.weixin.qq.com/tcb/uploadfile'
