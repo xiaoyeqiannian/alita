@@ -8,6 +8,9 @@ EXPLAIN_TEMPLATE_LOADING = False
 TEMPLATES_AUTO_RELOAD=True
 #################################################
 
+#Babel
+BABEL_TRANSLATION_DIRECTORIES = "/home/luna/alita/config/alita/translations/"
+
 # DB
 SQLALCHEMY_DATABASE_URI = 'mysql://alita:Alita@123@127.0.0.1:3306/alita?charset=utf8mb4'
 SQLALCHEMY_BINDS = {
