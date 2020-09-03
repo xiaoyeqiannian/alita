@@ -6,8 +6,19 @@ import locale
 
 from contextlib import contextmanager
 
-def date2string(dt, format="%Y-%m-%d %H:%M:%S"):
-    return dt.strftime(format)
+def format_datetime(datetime):
+    try:
+        fmt = '%Y-%m-%d %H:%M:%S'
+        return datetime.strftime(fmt)
+    except:
+        return None
+
+def format_date_normal(datetime):
+    try:
+        fmt = '%Y-%m-%d'
+        return datetime and datetime.strftime(fmt) or ''
+    except:
+        return None
 
 def date2week(dt):
     # return （2107, 1, 1） 哪一年的 第几周 第几天

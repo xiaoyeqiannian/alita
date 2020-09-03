@@ -21,3 +21,4 @@ Werkzeug==1.0.1
 WTForms==2.2.1
 XlsxWriter==1.2.8
 cachelib==0.1
+Flask-JWT==0.3.2
