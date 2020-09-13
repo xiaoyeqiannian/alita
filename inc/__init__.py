@@ -7,9 +7,7 @@ import jinja2
 from flask import Flask, g, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_babel import Babel
-from flask_jwt import JWT
 
-jwt = JWT()
 app = None
 db = None
 babel = None
@@ -117,8 +115,6 @@ def create_app(config=None):
             timezone = request.cookies.get('timezone')
             if timezone:
                 return timezone
-
-    jwt.init_app(app)
 
     install()
 
