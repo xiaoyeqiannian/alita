@@ -1,12 +1,8 @@
-#coding: utf-8
-
 import os
 import sys
 import importlib
-import jinja2
 from flask import Flask, g, request
 from flask_sqlalchemy import SQLAlchemy
-from flask_babel import Babel
 
 app = None
 db = None
@@ -100,6 +96,7 @@ def create_app(config=None):
 
     # --------- Babel ------------
     if app.config.get('BABEL_TRANSLATION_DIRECTORIES') and app.config.get('BABEL_DEFAULT_LOCALE'):
+        from flask_babel import Babel
         print('init Babel')
         babel = Babel(app)
         @babel.localeselector
