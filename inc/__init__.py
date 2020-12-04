@@ -1,12 +1,15 @@
 import os
 import sys
+import casbin
 import importlib
 from flask import Flask, g, request
 from flask_sqlalchemy import SQLAlchemy
 
+HOME = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(HOME, 'config'))
+
 app = None
 db = None
-babel = None
 
 def install_models(app_names):
     '''
@@ -60,10 +63,12 @@ def install():
         _import_custom_models(library_views)
 
 
+def befor_request_callbacks():
+    print('<<<<<<<<<<<', request.path, request.data.decode('utf8'))
+
+
 def after_request_callbacks(resp):
-    for func in getattr(g, 'call_after_request', ()):
-        print('after', func)
-        resp = func(resp)
+    print('>>>>>>>>>>>',resp.data.decode('utf8'))
     return resp
 
 
@@ -71,7 +76,7 @@ def create_app(config=None):
     """
     initialize application
     """
-    global app, db, babel
+    global app, db
 
     app = Flask(__name__)
     print("create app(%s) id:%s" % (__name__, id(app)))
@@ -80,40 +85,23 @@ def create_app(config=None):
     # load config path
     x = app.config.from_pyfile(config, silent=False)
 
-    # 去掉jinjia2模板中的空白行
-    app.jinja_env.trim_blocks = True
-    app.jinja_env.lstrip_blocks = True
-
     # --------- DB -----------------
     db = SQLAlchemy(app)
     print("create db id:%s via %r" % (id(db), SQLAlchemy))
 
+    from inc import casbin_adapter
     install_models(app.config['INSTALLED_APPS'])
 
     assert db
     db.create_all()
 
-
-    # --------- Babel ------------
-    if app.config.get('BABEL_TRANSLATION_DIRECTORIES') and app.config.get('BABEL_DEFAULT_LOCALE'):
-        from flask_babel import Babel
-        print('init Babel')
-        babel = Babel(app)
-        @babel.localeselector
-        def get_locale():
-            language = request.cookies.get('_LOCALE_')
-            if language:
-                return language
-        
-            return app.config.get('BABEL_DEFAULT_LOCALE')
-
-        @babel.timezoneselector
-        def get_timezone():
-            timezone = request.cookies.get('timezone')
-            if timezone:
-                return timezone
+    casbin_adapter.adapter = casbin_adapter.Adapter(db)
+    casbin_adapter.rbac = casbin.Enforcer(app.config["CASBIN_CONFIG_PATH"], casbin_adapter.adapter, False)
 
     install()
 
-    app.after_request(after_request_callbacks)
+    if app.config.get('DEBUG'):
+        app.before_request(befor_request_callbacks)
+        app.after_request(after_request_callbacks)
+
     return app

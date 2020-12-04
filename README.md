@@ -34,12 +34,12 @@ python cmd.py runserver -p 15000
 + reids  
 + memcache  
 + SQLAlchemy  
-+ Jinja2  
-+ Flask-Login  
++ casbin  
++ Flask-Login 
++ Flask-JWT 
 + uWSGI  
 + Flask-Script  
 + CSRFProtect  
-+ Babel
 
 ## Links
 
