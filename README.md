@@ -29,7 +29,52 @@ gunicorn -c config/alita/gunicorn.py gunicon_server:application
 python cmd.py runserver -p 15000
 ```
 
-## Feature
+### 4.command
+```
+# clean .pyc .pyo
+python cmd.py clean
+
+# show all urls
+python cmd.py urls
+
+# init app
+python cmd.py init
+
+# test
+python cmd.py runserver -p 8000
+```
+
+### 5.api response
+```
+# response
+{
+    code: "0000",
+    data: {},
+    message: "", # error message
+}
+
+# code
+"0000" # OK
+"2000" # DBERR
+"2001" # THIRDERR
+"2002" # DATAERR
+"2003" # IOERR
+
+"2100" # LOGINERR
+"2101" # PARAMERR
+"2102" # USERERR
+"2103" # ROLEERR
+"2104" # PWDERR
+"2105" # VERIFYERR
+
+"2200" # REQERR
+
+"2300" # NODATA
+
+"2400" # UNKOWNERR
+```
+
+### 6.Feature
 
 + reids  
 + memcache  
@@ -41,7 +86,5 @@ python cmd.py runserver -p 15000
 + Flask-Script  
 + CSRFProtect  
 
-## Links
+### 7.Links
 
->**The diffrent of pip and conda**  
->*https://www.anaconda.com/understanding-conda-and-pip/*
