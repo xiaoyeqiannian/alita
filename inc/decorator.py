@@ -3,11 +3,15 @@ import logging
 from functools import wraps
 from datetime import datetime
 from werkzeug.local import LocalProxy
-from flask import request, jsonify, _request_ctx_stack, current_app
+from flask import request, jsonify, _request_ctx_stack, current_app, Response
+from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.exceptions import HTTPException
 
 from util.consts import *
 from inc.retcode import RETCODE
 from inc.casbin_adapter import rbac
+from .exceptions import (ServerException, Success, DatabaseException,
+                        UnderDevelopment, UnknownException, LoginError)
 
 
 current_identity = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_identity', None))
@@ -59,28 +63,28 @@ def jwt_required(fn):
     def wapper(*args, **kwargs):
         auth_header_value = request.headers.get('Authorization', None)
         if not auth_header_value:
-            return jsonify(code=RETCODE.LOGINERR, msg='Authorization缺失')
+            raise LoginError(message = 'Authorization缺失!')
 
         parts = auth_header_value.split()
         if len(parts) == 1:
-            return jsonify(code=RETCODE.LOGINERR, msg='Token缺失')
+            raise LoginError(message = 'Token缺失!')
 
         elif len(parts) > 2:
-            return jsonify(code=RETCODE.LOGINERR, msg='Token无效')
+            raise LoginError(message = 'Token无效!')
 
         token = parts[1]
         if token is None:
-            return jsonify(code=RETCODE.LOGINERR, msg='Token异常')
+            raise LoginError(message = 'Token异常!')
 
         try:
             payload = jwt_decode(token)
         except jwt.InvalidTokenError as e:
-            return jsonify(code=RETCODE.LOGINERR, msg=str(e))
+            raise LoginError(message = e)
 
         _request_ctx_stack.top.current_identity = payload.get('identity')
 
         if payload.get('identity') is None:
-            return jsonify(code=RETCODE.LOGINERR, msg='用户不存在')
+            raise LoginError(message = '用户不存在!')
 
         return fn(*args, **kwargs)
     return wapper
@@ -113,3 +117,33 @@ def log2file(func):
 
         return value
     return wapper
+
+
+def except_handler(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            ret = func(*args, **kwargs) or {}
+
+        except ServerException as e:
+            return jsonify(e.to_dict())
+
+        except SQLAlchemyError as e:
+            return jsonify(DatabaseException(e).to_dict())
+
+        except HTTPException as e:  # abort 404/405/...
+            raise e
+
+        except NotImplementedError as e:
+            return jsonify(UnderDevelopment().to_dict())
+
+        except Exception as e:
+            return jsonify(UnknownException(e).to_dict())
+
+        else:
+            if isinstance(ret, dict):
+                return jsonify(Success(data=ret).to_dict())
+
+            return ret
+
+    return wrapper

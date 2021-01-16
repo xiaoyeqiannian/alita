@@ -5,8 +5,8 @@ from flask import request, jsonify
 from . import mod
 from util.consts import *
 from app.account.proc import *
-from inc.retcode import RETCODE
-from inc.decorator import jwt_required, verify_permission, current_identity
+from inc.exceptions import ArgumentError, ReqError, LoginError, UserError
+from inc.decorator import jwt_required, verify_permission, current_identity, except_handler
 
 
 """
@@ -21,21 +21,19 @@ from inc.decorator import jwt_required, verify_permission, current_identity
 @apiSuccess {String} username 用户登陆名称
 """
 @mod.route('/login', methods=["POST"])
+@except_handler
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
     if not username or not password:
-        return jsonify(code=RETCODE.LOGINERR, message='请输入正确的用户名或密码')
+        raise LoginError(message='请输入正确的用户名或密码')
 
     user = get_user_by_username(username)
     if not user:
-        return jsonify(code=RETCODE.LOGINERR, message="未找到用户")
+        raise LoginError(message='未找到用户')
 
-    isok, ret = user_login(user, password)
-    if not isok:
-        return jsonify(code=RETCODE.LOGINERR, message=ret)
-
-    return jsonify(code=RETCODE.OK, data={'token': ret.decode('utf8')})
+    token = user_login(user, password)
+    return {'token': token.decode('utf8')}
 
 
 """
@@ -53,6 +51,7 @@ def login():
 @apiSuccess {String} username 用户登陆名称
 """
 @mod.route('/regist', methods=['POST'])
+@except_handler
 def regist():
     username = request.json.get('username')
     name = request.json.get('name')
@@ -60,28 +59,24 @@ def regist():
     email = request.json.get('email')
     password = request.json.get('password')
     if not username or not password:
-        return jsonify(code=RETCODE.PARAMERR, message="请填写账号密码")
+        raise ArgumentError(message='请填写账号密码')
 
     user = get_user_by_username(username)
     if user:
-        return jsonify(code=RETCODE.USERERR, message="此用户已注册")
+        raise UserError(message='此用户已注册')
 
     isok, organization = modify_organization(name=username, kind=1)
     if not isok:
-        return jsonify(code=RETCODE.DATAERR, message="组织创建失败")
+        raise DataError(message='组织创建失败')
 
-    isok, user = modify_user(None,
-                            username = username,
-                            name = name,
-                            email = email,
-                            phone = phone,
-                            password = password,
-                            role_id = ROLE_ADMIN_ID,
-                            organization_id = organization.id)
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message="注册失败")
-
-    return jsonify(code=RETCODE.OK, data={})
+    modify_user(None,
+                username = username,
+                name = name,
+                email = email,
+                phone = phone,
+                password = password,
+                role_id = ROLE_ADMIN_ID,
+                organization_id = organization.id)
 
 
 """
@@ -101,6 +96,7 @@ def regist():
 @apiSuccess {String} username 用户登陆名称
 """
 @mod.route('/sub/add', methods=['POST'])
+@except_handler
 @jwt_required
 def subaccount_add():
     username = request.json.get('username')
@@ -110,24 +106,20 @@ def subaccount_add():
     password = request.json.get('password')
     role_id = request.json.get('role_id')
     if not username or not password:
-        return jsonify(code=RETCODE.PARAMERR, message="请填写账号密码")
+        raise ArgumentError(message='请填写账号密码')
 
     user = get_user_by_username(username)
     if user:
-        return jsonify(code=RETCODE.USERERR, message="此用户已注册")
+        raise UserError(message='此用户已注册')
 
-    isok, user = modify_user(None,
-                            username = username,
-                            name = name,
-                            email = email,
-                            phone = phone,
-                            password = password,
-                            role_id = role_id,
-                            organization_id = current_identity.get('organization_id'))
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message="注册失败")
-
-    return jsonify(code=RETCODE.OK, data={})
+    modify_user(None,
+                username = username,
+                name = name,
+                email = email,
+                phone = phone,
+                password = password,
+                role_id = role_id,
+                organization_id = current_identity.get('organization_id'))
 
 
 """
@@ -156,6 +148,7 @@ def subaccount_add():
 @apiSuccess {String} items.organization_name 组织名字
 """
 @mod.route('/list')
+@except_handler
 @jwt_required
 @verify_permission
 def user_list():
@@ -170,7 +163,7 @@ def user_list():
                             email = request.args.get('email'),
                             phone = request.args.get('phone'),
                             username = request.args.get('username'))
-    return jsonify(code=RETCODE.OK, data={'items': items, 'total': total, 'page': page, 'per_page': per_page})
+    return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
 
 """
@@ -188,23 +181,20 @@ def user_list():
 @apiParam {String} password 密码，这里主要是admin对子账户的密码重置,用户自己修改密码则需单独页面，调用修改密码接口
 """
 @mod.route('/modify', methods=['POST'])
+@except_handler
 @jwt_required
 def user_modify():
     if not request.json.get('bid'):
-        return jsonify(code=RETCODE.PARAMERR, message="缺少参数")
+        raise ArgumentError(message='缺少参数')
 
-    isok, ret = modify_user(request.json.get('bid'),
-                    user_id = current_identity.get('user_id'),
-                    username = request.json.get('username'),
-                    name = request.json.get('name'),
-                    email = request.json.get('email'),
-                    phone = request.json.get('phone'),
-                    password = request.json.get('password'),
-                    role_id = request.json.get('role_id'))
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message=ret)
-
-    return jsonify(code=RETCODE.OK, data={})
+    modify_user(request.json.get('bid'),
+                user_id = current_identity.get('user_id'),
+                username = request.json.get('username'),
+                name = request.json.get('name'),
+                email = request.json.get('email'),
+                phone = request.json.get('phone'),
+                password = request.json.get('password'),
+                role_id = request.json.get('role_id'))
 
 
 """
@@ -215,14 +205,11 @@ def user_modify():
 @apiParam {Number[]} bids 删除账号的数组,用户的bid
 """
 @mod.route('/del', methods=['POST'])
+@except_handler
 @jwt_required
 @verify_permission
 def users_del():
-    isok, ret = del_user(request.json.get('bids'))
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message=ret)
-
-    return jsonify(code=RETCODE.OK, data={})
+    del_user(request.json.get('bids'))
 
 
 """
@@ -233,11 +220,12 @@ def users_del():
 @apiSuccess {String[]} menus 目录如：[page1, page2]
 """
 @mod.route('/menu')
+@except_handler
 @jwt_required
 def user_menu():
     user_id = current_identity.get('user_id')
     menus = get_user_menu(user_id)
-    return jsonify(code=RETCODE.OK, data={"menus": menus})
+    return {"menus": menus}
 
 
 """
@@ -260,6 +248,7 @@ def user_menu():
 @apiSuccess {String[]} items.permissions 角色的权限列表
 """
 @mod.route('/role/list')
+@except_handler
 @jwt_required
 @verify_permission
 def role_list():
@@ -271,7 +260,7 @@ def role_list():
     total, items = get_roles(page, per_page,
                             organization_bid = organization_bid,
                             name = request.args.get('name'))
-    return jsonify(code=RETCODE.OK, data={'items': items, 'total': total, 'page': page, 'per_page': per_page})
+    return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
 
 """
@@ -288,19 +277,16 @@ def role_list():
 @apiParam {Number} state 0:无效,1:有效,2:删除
 """
 @mod.route('/role/modify', methods=['POST'])
+@except_handler
 @jwt_required
 @verify_permission
 def role_modify():
-    isok, ret = modify_role(request.json.get('id'),
-                    organization_id = current_identity.get('organization_id'),
-                    name = request.json.get('name'),
-                    menu = request.json.get('menu'),
-                    permissions = request.json.get('permissions'),
-                    state = request.json.get('state'))
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message=ret)
-
-    return jsonify(code=RETCODE.OK, data={})
+    modify_role(request.json.get('id'),
+                organization_id = current_identity.get('organization_id'),
+                name = request.json.get('name'),
+                menu = request.json.get('menu'),
+                permissions = request.json.get('permissions'),
+                state = request.json.get('state'))
 
 
 """
@@ -311,14 +297,11 @@ def role_modify():
 @apiParam {Number} id 角色id
 """
 @mod.route('/role/del', methods=['POST'])
+@except_handler
 @jwt_required
 @verify_permission
 def role_del():
-    isok, ret = del_role(request.json.get('id'))
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message=ret)
-
-    return jsonify(code=RETCODE.OK, data={})
+    del_role(request.json.get('id'))
 
 
 """
@@ -338,6 +321,7 @@ def role_del():
 @apiSuccess {Number} items.kind 组织类型，1:个人，2:组织
 """
 @mod.route('/organization/list')
+@except_handler
 @jwt_required
 @verify_permission
 def organization_list():
@@ -349,7 +333,7 @@ def organization_list():
     total, items = get_organizations(page, per_page,
                                     organization_bid = organization_bid,
                                     name = request.args.get('name'))
-    return jsonify(code=RETCODE.OK, data={'items': items, 'total': total, 'page': page, 'per_page': per_page})
+    return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
 
 """
@@ -362,6 +346,7 @@ def organization_list():
 @apiParam {String} kind 1:个人,2:团体
 """
 @mod.route('/organization/modify', methods=['POST'])
+@except_handler
 @jwt_required
 @verify_permission
 def organization_modify():
@@ -371,16 +356,12 @@ def organization_modify():
         organization_bid = current_identity.get("organization_bid")
 
     if not organization_bid:
-        return jsonify(code=RETCODE.PARAMERR, message="参数异常")
+        raise ArgumentError(message='参数异常')
 
-    isok, ret = modify_organization(
-                    organization_bid = organization_bid,
-                    name = request.json.get('name'),
-                    kind = request.json.get('kind'))
-    if not isok:
-        return jsonify(code=RETCODE.DATAERR, message=ret)
-
-    return jsonify(code=RETCODE.OK, data={})
+    modify_organization(
+        organization_bid = organization_bid,
+        name = request.json.get('name'),
+        kind = request.json.get('kind'))
 
 
 """
@@ -393,15 +374,12 @@ def organization_modify():
 @apiParam {String} new_password 新密码
 """
 @mod.route('/password/modify', methods=["POST"])
+@except_handler
 @jwt_required
 def password_modify():
-    isok, ret = modify_user(current_identity.get('user_bid'),
-                            password = request.json.get('password'),
-                            new_password = request.json.get('new_password'))
-    if not isok:
-        return jsonify(code=RETCODE.USERERR, message=ret)
-        
-    return jsonify(code=RETCODE.OK, data={})
+    modify_user(current_identity.get('user_bid'),
+                password = request.json.get('password'),
+                new_password = request.json.get('new_password'))
 
 
 """
@@ -414,16 +392,13 @@ def password_modify():
 @apiParam {String} phone 注册时绑定的手机号（选填）
 """
 @mod.route('/password/forget', methods=["POST"])
+@except_handler
 def password_forget():
     username = request.json.get('username')
     email = request.json.get('email')
     phone = request.json.get('phone')
-    isok = check_email_phone(username=username, email=email, phone=phone)
-    if not isok:
-        return jsonify(code=RETCODE.USERERR, message="登录名或邮箱错误")
-
-    send_code(email=email, phone=phone) # add async
-    return jsonify(code=RETCODE.OK, data={})
+    check_email_phone(username=username, email=email, phone=phone)
+    send_code(email=email, phone=phone)
 
 
 """
@@ -437,29 +412,22 @@ def password_forget():
 @apiParam {String} password 修改后的新密码
 """
 @mod.route('/code/verify', methods=["POST"])
+@except_handler
 def code_verify():
     email = request.json.get('email', '')
     phone = request.json.get('phone', '')
     code = request.json.get('code')
     password = request.json.get('password')
     if not email or not code or not password:
-        return jsonify(code=RETCODE.PARAMERR, message="参数缺失")
+        raise ArgumentError(message='参数缺失')
 
-    isok = check_code(email=email, phone=phone, code=code)
-    if not isok:
-        return jsonify(code=RETCODE.USERERR, message="请输入正确的验证码")
-    
+    check_code(email=email, phone=phone, code=code)
     user = get_user_by_email_or_phone(email, phone)
     if not user:
-        return jsonify(code=RETCODE.USERERR, message="未找到此用户")
-    isok, user = modify_user(user.bid, password = password)
-    if not isok:
-        return jsonify(code=RETCODE.USERERR, message=user)
-    isok, err = user_login(user)
-    if not isok:
-        return jsonify(code=RETCODE.USERERR, message=err)
+        raise UserError(message='未找到此用户')
 
-    return jsonify(code=RETCODE.OK, data={})
+    modify_user(user.bid, password = password)
+    user_login(user)
 
 
 """
@@ -468,7 +436,8 @@ def code_verify():
 @apiVersion 1.0.0
 """
 @mod.route('/loginout', methods=["POST"])
+@except_handler
 @jwt_required
 def loginout():
-    return jsonify(code=RETCODE.OK, data={})
+    return {}
 

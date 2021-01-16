@@ -19,5 +19,6 @@ class RETCODE:
     REQERR              = "2200"
 
     NODATA              = "2300" #无数据
+    UNDERDEBUG          = "2301" # debug模式下无法使用
 
     UNKOWNERR           = "2400"

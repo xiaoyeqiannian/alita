@@ -12,6 +12,7 @@ from util import emailer
 from util.consts import *
 from inc.snowflake import snow
 from inc.decorator import jwt_encode
+from inc.exceptions import ArgumentError, ReqError, LoginError, UserError
 
 
 def get_user_by_username(username):
@@ -23,29 +24,27 @@ def get_user_by_email_or_phone(email, phone):
     if user:
         return user
 
-    user = User.query.filter(User.phone==phone, User.state==1).first()
-    if user:
-        return user
+    return User.query.filter(User.phone==phone, User.state==1).first()
 
 
 def user_login(user, password=None):
     if password:
         ret = check_password_hash(user.password, password)
         if not ret:
-            return False, '密码错误'
+            raise UserError(message = '密码错误')
     
     o = Organization.get(user.organization_id)
     if not o:
-        return False, "账号异常"
+        raise UserError(message = '账号异常')
 
     r = Role.get(user.role_id)
-    return True, jwt_encode({ 'user_id': user.id,
-                         'user_name': user.username,
-                         'role_id': user.role_id,
-                         'user_bid': user.bid,
-                         'organization_id': user.organization_id,
-                         'organization_bid': o.bid,
-                         'role_name': r and r.name})
+    return jwt_encode({ 'user_id': user.id,
+                        'user_name': user.username,
+                        'role_id': user.role_id,
+                        'user_bid': user.bid,
+                        'organization_id': user.organization_id,
+                        'organization_bid': o.bid,
+                        'role_name': r and r.name})
 
 
 def get_users(page, per_page, **kwargs):
@@ -99,7 +98,7 @@ def get_users(page, per_page, **kwargs):
 
 def del_user(bids):
     if not bids or not isinstance(bids, list):
-        return False, '参数异常'
+        raise ArgumentError(message= '参数异常')
 
     for bid in bids:
         u = User.query.filter_by(bid = bid, state = 1).first()
@@ -133,7 +132,7 @@ def modify_user(bid, **kwargs):
     if username and username != c.username:# username用于登陆，必须唯一
         m = db.session.query(User).filter(User.username==username, User.state==1).first()
         if m:
-            return False, '用户名已存在'
+            raise UserError(message= '用户名已存在')
 
         c.username = username
 
@@ -146,11 +145,11 @@ def modify_user(bid, **kwargs):
     if new_password:# 密码修改
         if verify_code:
             if not check_code(email = email, phone = phone, code = code):
-                return False, "请输入正确的验证码"
+                raise ArgumentError(message= '请输入正确的验证码')
 
         elif password:
             if not check_password_hash(c.password, password):
-                return False, '密码错误'
+                raise ArgumentError(message= '密码错误')
 
         c.password = generate_password_hash(new_password)
 
@@ -170,7 +169,7 @@ def modify_user(bid, **kwargs):
         c.organization_id = organization_id
     db.session.add(c)
     db.session.commit()
-    return True, c
+    return c
 
 
 def get_user_menu(_id):
@@ -213,12 +212,11 @@ def get_roles(page, per_page, **kwargs):# TODO role.id这个判断需要走全�
 def del_role(_id):
     r = Role.get(_id)
     if not r:
-        return False, '未找到此权限'
+        raise UserError(message= '未找到此权限')
 
     r.state = 0
     db.session.add(r)
     db.session.commit()
-    return True, ''
 
 
 def modify_role(_id, organization_id, **kwargs):
@@ -233,7 +231,7 @@ def modify_role(_id, organization_id, **kwargs):
     if name and r.name != name:
         r1 = db.session.query(Role).filter(Role.name==name, Role.organization_id==organization_id, Role.state==1).first()
         if r1:
-            return False, '此角色已存在!'
+            raise UserError(message= '此角色已存在!')
 
         r.name = name
     r.menu = menu
@@ -245,7 +243,7 @@ def modify_role(_id, organization_id, **kwargs):
     rbac.remove_filtered_policy(0, str(r.id))
     for item in permissions:
         rbac.add_policy(str(r.id), item.get('path'), item.get('method'))
-    return True, r
+    return r
 
 
 def get_organization_by_bid(bid):
@@ -276,30 +274,36 @@ def modify_organization(**kwargs):
     name = kwargs.get('name', '')
     kind = kwargs.get('kind', '')
     organization = None
+
     if organization_id:
         organization = Organization.get(organization_id)
     elif organization_bid:
         organization = Organization.get_by_bid(organization_bid)
+
     if not organization:
         organization = Organization()
         organization.bid = str(snow.get_id())
 
     if name and organization.name != name:
         organization.name = name
+
     if kind and organization.kind != kind:
         organization.kind = kind
+
     db.session.add(organization)
     db.session.commit()
     return True, organization
 
 
 def check_email_phone(**kwargs):
-    user = User.query.filter(User.username==kwargs.get('username'),
-                or_(User.email==kwargs.get('email'), User.phone==kwargs.get('phone'))).first()
+    username = kwargs.get('username')
+    email = kwargs.get('email')
+    phone = kwargs.get('phone')
+    user = User.query.filter(User.username==username,
+                            or_(User.email==email, User.phone==phone))\
+                     .first()
     if not user:
-        return False
-
-    return True
+        raise ArgumentError(message= '手机号或邮箱错误')
 
 
 def send_code(**kwargs):
@@ -308,7 +312,7 @@ def send_code(**kwargs):
     code = ''.join([str(random.randint(0,9)) for i in range(VERIFY_CODE_LENGTH)])
     if email:
         rc.set(email + ":code", code, VERIFY_CODE_EXPIRE_TIME)
-        emailer.send(email, 'DP CloudServer 验证码', "您的验证码：" + code)
+        emailer.send(email, '验证码', "您的验证码：" + code)
     elif phone:
         pass
 
@@ -321,9 +325,6 @@ def check_code(**kwargs):
         r_code = rc.get(email + ":code")
         if r_code == code or (r_code and code == "666888"):
             rc.delete(email + ":code")
-            return True
+            return
 
-    elif phone:
-        return False
-
-    return False
+    raise ArgumentError(message= '验证码错误')
