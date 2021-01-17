@@ -79,7 +79,7 @@ def jwt_required(fn):
         try:
             payload = jwt_decode(token)
         except jwt.InvalidTokenError as e:
-            raise LoginError(message = e)
+            raise LoginError(message="Token失效")
 
         _request_ctx_stack.top.current_identity = payload.get('identity')
 
@@ -94,8 +94,7 @@ def verify_permission(func):
     @wraps(func)
     def wapper(*args, **kwargs):
         role_id = current_identity.get('role_id')
-        user_id = current_identity.get('user_id')
-        role = user_id==ROLE_ROOT_ID and 'root' or str(role_id) # NOTE: root的role id是个固定值，需在系统初始时创建
+        role = role_id==ROLE_ROOT_ID and 'root' or str(role_id) # NOTE: root的role id是个固定值，需在系统初始时创建
         isok = rbac.enforce(role, request.path, str.lower(request.method))
         if isok:
             return func(*args, **kwargs)
