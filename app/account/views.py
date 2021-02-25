@@ -14,21 +14,21 @@ from inc.decorator import jwt_required, verify_permission, current_identity, exc
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {String} username 登陆账号
+@apiParam {String} name 登陆账号
 @apiParam {String} password 密码
 
 @apiSuccess {Number} id
-@apiSuccess {String} username 用户登陆名称
+@apiSuccess {String} name 用户登陆名称
 """
 @mod.route('/login', methods=["POST"])
 @except_handler
 def login():
-    username = request.json.get('username')
+    name = request.json.get('name')
     password = request.json.get('password')
-    if not username or not password:
+    if not name or not password:
         raise LoginError(message='请输入正确的用户名或密码')
 
-    user = get_user_by_username(username)
+    user = get_user_by_name(name)
     if not user:
         raise LoginError(message='未找到用户')
 
@@ -41,42 +41,39 @@ def login():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {String} username 登陆账号
-@apiParam {String} name 真实姓名
+@apiParam {String} name 登陆账号
 @apiParam {String} phone 手机号
 @apiParam {String} email 邮箱，如用于找回密码
 @apiParam {String} password 密码
 
 @apiSuccess {Number} id
-@apiSuccess {String} username 用户登陆名称
+@apiSuccess {String} name 用户登陆名称
 """
 @mod.route('/regist', methods=['POST'])
 @except_handler
 def regist():
-    username = request.json.get('username')
     name = request.json.get('name')
     phone = request.json.get('phone')
     email = request.json.get('email')
     password = request.json.get('password')
-    if not username or not password:
-        raise ArgumentError(message='请填写账号密码')
+    if not name or not password:
+        raise ArgumentError(message='please input name or password')
 
-    user = get_user_by_username(username)
+    user = get_user_by_name(name)
     if user:
-        raise UserError(message='此用户已注册')
+        raise UserError(message='This user is registed')
 
-    isok, organization = modify_organization(name=username, kind=1)
-    if not isok:
-        raise DataError(message='组织创建失败')
+    group = modify_group(name=name, kind=1)
+    if not group:
+        raise DataError(message='Group create fail')
 
     modify_user(None,
-                username = username,
                 name = name,
                 email = email,
                 phone = phone,
                 password = password,
                 role_id = ROLE_ADMIN_ID,
-                organization_id = organization.id)
+                group_id = group.id)
 
 
 """
@@ -84,42 +81,39 @@ def regist():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {String} username 登陆账号
-@apiParam {String} name 真实姓名
+@apiParam {String} name 登陆账号
 @apiParam {String} phone 手机号
 @apiParam {String} email 邮箱，如用于找回密码
 @apiParam {String} password 密码
 @apiParam {String} role_id 角色id
-@apiParam {String} organization_id 组织id
+@apiParam {String} group_id 组织id
 
 @apiSuccess {Number} id
-@apiSuccess {String} username 用户登陆名称
+@apiSuccess {String} name 用户登陆名称
 """
 @mod.route('/sub/add', methods=['POST'])
 @except_handler
 @jwt_required
 def subaccount_add():
-    username = request.json.get('username')
     name = request.json.get('name')
     phone = request.json.get('phone')
     email = request.json.get('email')
     password = request.json.get('password')
     role_id = request.json.get('role_id')
-    if not username or not password:
-        raise ArgumentError(message='请填写账号密码')
+    if not name or not password:
+        raise ArgumentError(message='Please input name and password')
 
-    user = get_user_by_username(username)
+    user = get_user_by_name(name)
     if user:
-        raise UserError(message='此用户已注册')
+        raise UserError(message='The user is registed')
 
     modify_user(None,
-                username = username,
                 name = name,
                 email = email,
                 phone = phone,
                 password = password,
                 role_id = role_id,
-                organization_id = current_identity.get('organization_id'))
+                group_id = current_identity.get('group_id'))
 
 
 """
@@ -127,11 +121,10 @@ def subaccount_add():
 @apiGroup Account
 @apiVersion 1.0.0    
 
-@apiParam {String} organization_bid 组织id(选填，超级管理员使用这个参数，查看指定组织下的子用户，root下不填则查看所有用户)
-@apiParam {String} name 真实姓名，支持模糊搜索
+@apiParam {String} group_id 组织id(选填，超级管理员使用这个参数，查看指定组织下的子用户，root下不填则查看所有用户)
+@apiParam {String} name 登录名，支持模糊搜索
 @apiParam {String} email 支持模糊搜索
 @apiParam {String} phone 支持模糊搜索
-@apiParam {String} username 登录名，支持模糊搜索
 @apiParam {Number} page 页码，从1开始
 @apiParam {Number} per_page 每页展示条数
 
@@ -139,30 +132,27 @@ def subaccount_add():
 @apiSuccess {Number} page
 @apiSuccess {Number} per_page
 @apiSuccess {Object[]} items
-@apiSuccess {Number} items.bid
-@apiSuccess {String} items.username 用户登陆名
-@apiSuccess {String} items.name 真实姓名
+@apiSuccess {String} items.name 用户登陆名
 @apiSuccess {String} items.email 用户邮箱
 @apiSuccess {String} items.phone 用户手机号
-@apiSuccess {String} items.organization_bid 组织bid
-@apiSuccess {String} items.organization_name 组织名字
+@apiSuccess {String} items.group_id 组织id
+@apiSuccess {String} items.group_name 组织名字
 """
 @mod.route('/list')
 @except_handler
 @jwt_required
 @verify_permission
 def user_list():
-    organization_bid = current_identity.get('organization_bid')
-    if ORGANIZATION_SYS_ADMIN_ID == current_identity.get('organization_id'):
-        organization_bid = request.args.get('organization_bid', None, type=int)
+    group_id = current_identity.get('group_id')
+    if GROUP_SYS_ADMIN_ID == group_id:
+        group_id = request.args.get('group_id', None, type=int)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     total, items = get_users(page, per_page,
-                            organization_bid = organization_bid,
+                            group_id = group_id,
                             name = request.args.get('name'),
                             email = request.args.get('email'),
-                            phone = request.args.get('phone'),
-                            username = request.args.get('username'))
+                            phone = request.args.get('phone'))
     return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
 
@@ -172,9 +162,8 @@ def user_list():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {Number} bid 用户bid
-@apiParam {String} username 登陆账号
-@apiParam {String} name 真实姓名
+@apiParam {Number} user_id 用户id
+@apiParam {String} name 登陆账号
 @apiParam {String} phone 手机号
 @apiParam {String} email 邮箱，如用于找回密码
 @apiParam {String} role_id 角色ID
@@ -184,12 +173,12 @@ def user_list():
 @except_handler
 @jwt_required
 def user_modify():
-    if not request.json.get('bid'):
+    user_id = request.json.get('user_id') or current_identity.get('user_id')
+    if not user_id:
         raise ArgumentError(message='缺少参数')
 
-    modify_user(request.json.get('bid'),
+    modify_user(user_id,
                 user_id = current_identity.get('user_id'),
-                username = request.json.get('username'),
                 name = request.json.get('name'),
                 email = request.json.get('email'),
                 phone = request.json.get('phone'),
@@ -202,14 +191,14 @@ def user_modify():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {Number[]} bids 删除账号的数组,用户的bid
+@apiParam {Number[]} user_ids 删除账号的数组,用户的id
 """
 @mod.route('/del', methods=['POST'])
 @except_handler
 @jwt_required
 @verify_permission
 def users_del():
-    del_user(request.json.get('bids'))
+    del_user(request.json.get('user_ids'))
 
 
 """
@@ -233,7 +222,7 @@ def user_menu():
 @apiGroup Account
 @apiVersion 1.0.0    
 
-@apiParam {Number} organization_bid
+@apiParam {Number} group_id
 @apiParam {String} name
 @apiParam {Number} page 页码，从1开始
 @apiParam {Number} per_page 每页展示条数
@@ -252,13 +241,13 @@ def user_menu():
 @jwt_required
 @verify_permission
 def role_list():
-    organization_bid = current_identity.get('organization_bid')
-    if ORGANIZATION_SYS_ADMIN_ID == current_identity.get('organization_id'):
-        organization_bid = request.args.get('organization_bid', None, type=int)
+    group_id = current_identity.get('group_id')
+    if GROUP_SYS_ADMIN_ID == current_identity.get('group_id'):
+        group_id = request.args.get('group_id', None, type=int)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     total, items = get_roles(page, per_page,
-                            organization_bid = organization_bid,
+                            group_id = group_id,
                             name = request.args.get('name'))
     return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
@@ -282,7 +271,7 @@ def role_list():
 @verify_permission
 def role_modify():
     modify_role(request.json.get('id'),
-                organization_id = current_identity.get('organization_id'),
+                group_id = current_identity.get('group_id'),
                 name = request.json.get('name'),
                 menu = request.json.get('menu'),
                 permissions = request.json.get('permissions'),
@@ -305,7 +294,7 @@ def role_del():
 
 
 """
-@api {get} /account/organization/list 获取组织列表
+@api {get} /account/group/list 获取组织列表
 @apiGroup Account
 @apiVersion 1.0.0
 
@@ -316,50 +305,50 @@ def role_del():
 @apiSuccess {Number} page
 @apiSuccess {Number} per_page
 @apiSuccess {Object[]} items
-@apiSuccess {Number} items.bid
+@apiSuccess {Number} items.id
 @apiSuccess {String} items.name 组织名称
 @apiSuccess {Number} items.kind 组织类型，1:个人，2:组织
 """
-@mod.route('/organization/list')
+@mod.route('/group/list')
 @except_handler
 @jwt_required
 @verify_permission
-def organization_list():
-    organization_bid = current_identity.get('organization_bid')
-    if ORGANIZATION_SYS_ADMIN_ID == current_identity.get('organization_id'):
-        organization_bid = request.args.get('organization_bid', None, type=int)
+def group_list():
+    group_id = current_identity.get('group_id')
+    if GROUP_SYS_ADMIN_ID == group_id:
+        group_id = request.args.get('group_id', None, type=int)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    total, items = get_organizations(page, per_page,
-                                    organization_bid = organization_bid,
+    total, items = get_groups(page, per_page,
+                                    group_id = group_id,
                                     name = request.args.get('name'))
     return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
 
 
 """
-@api {post} /account/organization/modify 组织信息修改
+@api {post} /account/group/modify 组织信息修改
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {String} organization_bid 指定某个组织修改（root下必填，其他用户取所属组织信息）
+@apiParam {String} group_id 指定某个组织修改（root下必填，其他用户取所属组织信息）
 @apiParam {String} name 名称
 @apiParam {String} kind 1:个人,2:团体
 """
-@mod.route('/organization/modify', methods=['POST'])
+@mod.route('/group/modify', methods=['POST'])
 @except_handler
 @jwt_required
 @verify_permission
-def organization_modify():
-    if ORGANIZATION_SYS_ADMIN_ID == current_identity.get('organization_id'):
-        organization_bid = request.json.get('organization_bid')
+def group_modify():
+    if GROUP_SYS_ADMIN_ID == current_identity.get('group_id'):
+        group_id = request.json.get('group_id')
     else:
-        organization_bid = current_identity.get("organization_bid")
+        group_id = current_identity.get("group_id")
 
-    if not organization_bid:
+    if not group_id:
         raise ArgumentError(message='参数异常')
 
-    modify_organization(
-        organization_bid = organization_bid,
+    modify_group(
+        group_id = group_id,
         name = request.json.get('name'),
         kind = request.json.get('kind'))
 
@@ -377,7 +366,7 @@ def organization_modify():
 @except_handler
 @jwt_required
 def password_modify():
-    modify_user(current_identity.get('user_bid'),
+    modify_user(current_identity.get('user_id'),
                 password = request.json.get('password'),
                 new_password = request.json.get('new_password'))
 
@@ -387,17 +376,17 @@ def password_modify():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {String} username 登陆名
+@apiParam {String} name 登陆名
 @apiParam {String} email 注册时绑定的邮箱（选填）
 @apiParam {String} phone 注册时绑定的手机号（选填）
 """
 @mod.route('/password/forget', methods=["POST"])
 @except_handler
 def password_forget():
-    username = request.json.get('username')
+    name = request.json.get('name')
     email = request.json.get('email')
     phone = request.json.get('phone')
-    check_email_phone(username=username, email=email, phone=phone)
+    check_email_phone(name=name, email=email, phone=phone)
     send_code(email=email, phone=phone)
 
 
@@ -406,38 +395,38 @@ def password_forget():
 @apiGroup Account
 @apiVersion 1.0.0
 
+@apiParam {String} name 登录名
 @apiParam {String} email 邮箱（选填）
-@apiParam {String} phone 手机号（选填）
 @apiParam {String} code 验证码
 @apiParam {String} password 修改后的新密码
 """
 @mod.route('/code/verify', methods=["POST"])
 @except_handler
 def code_verify():
+    name = request.json.get('name', '')
     email = request.json.get('email', '')
-    phone = request.json.get('phone', '')
     code = request.json.get('code')
     password = request.json.get('password')
-    if not email or not code or not password:
+    if not name or not email or not code or not password:
         raise ArgumentError(message='参数缺失')
 
-    check_code(email=email, phone=phone, code=code)
-    user = get_user_by_email_or_phone(email, phone)
+    check_code(email=email, code=code)
+    user = get_user_by_name(name)
     if not user:
         raise UserError(message='未找到此用户')
 
-    modify_user(user.bid, password = password)
+    modify_user(user.id, password = password)
     user_login(user)
 
 
 """
-@api {post} /account/loginout 退出登陆
+@api {post} /account/logout 退出登陆
 @apiGroup Account
 @apiVersion 1.0.0
 """
-@mod.route('/loginout', methods=["POST"])
+@mod.route('/logout', methods=["POST"])
 @except_handler
 @jwt_required
-def loginout():
+def logout():
     return {}
 

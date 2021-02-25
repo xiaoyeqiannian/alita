@@ -9,13 +9,13 @@ class CasbinRule(db.Model):
     __table_args__ = {"useexisting":True, 'mysql_charset':'utf8', 'mysql_engine':'InnoDB'}
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
-    ptype = Column(String(255))
-    v0 = Column(String(255))
-    v1 = Column(String(255))
-    v2 = Column(String(255))
-    v3 = Column(String(255))
-    v4 = Column(String(255))
-    v5 = Column(String(255))
+    ptype = Column("p_type", String(255))
+    v0 = Column("v0", String(255))
+    v1 = Column("v1", String(255))
+    v2 = Column("v2", String(255))
+    v3 = Column("v3", String(255))
+    v4 = Column("v4", String(255))
+    v5 = Column("v5", String(255))
 
     def __str__(self):
         arr = [self.ptype]

@@ -64,11 +64,17 @@ def install():
 
 
 def befor_request_callbacks():
-    print('<<<<<<<<<<<', request.path, request.data.decode('utf8'))
+    try:
+        print('<<<<<<<<<<<', request.path, request.data.decode('utf8'))
+    except:
+        pass
 
 
 def after_request_callbacks(resp):
-    print('>>>>>>>>>>>',resp.data.decode('utf8'))
+    try:
+        print('>>>>>>>>>>>',resp.data.decode('utf8'))
+    except:
+        pass
     return resp
 
 
@@ -77,6 +83,9 @@ def create_app(config=None):
     initialize application
     """
     global app, db
+
+    if app:
+        return app
 
     app = Flask(__name__)
     print("create app(%s) id:%s" % (__name__, id(app)))

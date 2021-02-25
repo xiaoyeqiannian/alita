@@ -1,5 +1,6 @@
 import random
 import time
+import base64
 from flask import session
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,8 +16,8 @@ from inc.decorator import jwt_encode
 from inc.exceptions import ArgumentError, ReqError, LoginError, UserError
 
 
-def get_user_by_username(username):
-    return User.query.filter(User.username == username, User.state == 1).first()
+def get_user_by_name(name):
+    return User.query.filter(User.name == name, User.state == 1).first()
 
 
 def get_user_by_email_or_phone(email, phone):
@@ -29,49 +30,40 @@ def get_user_by_email_or_phone(email, phone):
 
 def user_login(user, password=None):
     if password:
-        ret = check_password_hash(user.password, password)
+        ret = check_password_hash(user.password, base64.b64decode(password).decode('utf8'))
         if not ret:
-            raise UserError(message = '密码错误')
+            raise UserError(message = 'Password error!')
     
-    o = Organization.get(user.organization_id)
+    o = Group.get(user.group_id)
     if not o:
-        raise UserError(message = '账号异常')
+        raise UserError(message = 'Account error!')
 
     r = Role.get(user.role_id)
     return jwt_encode({ 'user_id': user.id,
-                        'user_name': user.username,
+                        'user_name': user.name,
                         'role_id': user.role_id,
-                        'user_bid': user.bid,
-                        'organization_id': user.organization_id,
-                        'organization_bid': o.bid,
+                        'group_id': user.group_id,
                         'role_name': r and r.name})
 
 
 def get_users(page, per_page, **kwargs):
     pagination = db.session.query(User)\
-                        .join(Organization, Organization.id == User.organization_id)\
+                        .join(Group, Group.id == User.group_id)\
                         .join(Role, Role.id == User.role_id)\
                         .filter(User.state == 1, User.role_id > ROLE_ADMIN_ID)\
                         .with_entities(
                                     User.id,           # 0
-                                    User.bid,          # 1
-                                    User.username,     # 2
-                                    User.name,         # 3
-                                    User.email,        # 4
-                                    User.phone,        # 5
-                                    Role.id,           # 6
-                                    Role.name,         # 7
-                                    Organization.bid,  # 8
-                                    Organization.name, # 9
+                                    User.name,         # 1
+                                    User.email,        # 2
+                                    User.phone,        # 3
+                                    Role.id,           # 4
+                                    Role.name,         # 5
+                                    Group.name,        # 6
                                     )\
                         .order_by(User.id.desc())
 
-    if kwargs.get('organization_bid'):
-        pagination = pagination.filter(Organization.bid == kwargs.get('organization_bid'))
     if kwargs.get('name'):
         pagination = pagination.filter(User.name.like("%{}%".format(kwargs.get('name'))))
-    if kwargs.get('username'):
-        pagination = pagination.filter(User.username.like("%{}%".format(kwargs.get('username'))))
     if kwargs.get('email'):
         pagination = pagination.filter(User.email.like("%{}%".format(kwargs.get('email'))))
     if kwargs.get('phone'):
@@ -82,26 +74,26 @@ def get_users(page, per_page, **kwargs):
     for item in pagination.items:
         ret.append({
                 "id":                item[0],
-                "bid":               str(item[1]),
-                "username":          item[2],
-                "name":              item[3],
-                "email":             item[4],
-                "phone":             item[5],
-                "role_id":           item[6],
-                "role_name":         item[7],
-                "organization_bid":  item[8],
-                "organization_name": item[9],
+                "name":              item[1],
+                "email":             item[2],
+                "phone":             item[3],
+                "role_id":           item[4],
+                "role_name":         item[5],
+                "group_name":        item[6],
             })
 
     return pagination.total, ret
 
 
-def del_user(bids):
-    if not bids or not isinstance(bids, list):
+def del_user(user_ids):
+    if not user_ids or not isinstance(user_ids, list):
         raise ArgumentError(message= '参数异常')
 
-    for bid in bids:
-        u = User.query.filter_by(bid = bid, state = 1).first()
+    for _id in user_ids:
+        if not _id:
+            continue
+        
+        u = User.query.filter_by(id = _id, state = 1).first()
         if not u:
             continue
 
@@ -111,32 +103,27 @@ def del_user(bids):
     return True, ''
 
 
-def modify_user(bid, **kwargs):
+def modify_user(_id, **kwargs):
     password = kwargs.get('password')
     new_password = kwargs.get('new_password')
     verify_code = kwargs.get('verify_code')
-    username = kwargs.get('username', '')
     name = kwargs.get('name')
     email = kwargs.get('email', '')
     phone = kwargs.get('phone', '')
     state = kwargs.get('state')
     role_id = kwargs.get('role_id')
-    organization_id = kwargs.get('organization_id')
-    c = bid and User.query.filter_by(bid = bid).first()
+    group_id = kwargs.get('group_id')
+    c = User.query.filter_by(id = _id).first()
     if not c:
         c = User(state = 1)
         # 新注册用户分配admin角色及权限,admin权限默认初始化为1,请确认
         c.role_id = 1
-        c.bid = str(snow.get_id())
 
-    if username and username != c.username:# username用于登陆，必须唯一
-        m = db.session.query(User).filter(User.username==username, User.state==1).first()
+    if name and name != c.name:# name用于登陆，必须唯一
+        m = db.session.query(User).filter(User.name==name, User.state==1).first()
         if m:
-            raise UserError(message= '用户名已存在')
+            raise UserError(message= 'The user is existed')
 
-        c.username = username
-
-    if name:
         c.name = name
 
     if phone:
@@ -145,16 +132,17 @@ def modify_user(bid, **kwargs):
     if new_password:# 密码修改
         if verify_code:
             if not check_code(email = email, phone = phone, code = code):
-                raise ArgumentError(message= '请输入正确的验证码')
+                raise ArgumentError(message= 'Use the right code')
 
         elif password:
-            if not check_password_hash(c.password, password):
-                raise ArgumentError(message= '密码错误')
+            print(c.password, base64.b64decode(password).decode('utf8'))
+            if not check_password_hash(c.password, base64.b64decode(password).decode('utf8')):
+                raise ArgumentError(message= 'Password error')
 
-        c.password = generate_password_hash(new_password)
+        c.password = generate_password_hash(base64.b64decode(new_password).decode('utf8'))
 
     elif password:
-        c.password = generate_password_hash(password)
+        c.password = generate_password_hash(base64.b64decode(password).decode('utf8'))
 
     if email:
         c.email = email
@@ -165,8 +153,8 @@ def modify_user(bid, **kwargs):
     if role_id:
         c.role_id = role_id
 
-    if organization_id:
-        c.organization_id = organization_id
+    if group_id:
+        c.group_id = group_id
     db.session.add(c)
     db.session.commit()
     return c
@@ -184,14 +172,14 @@ def get_user_menu(_id):
     return role.menu.split(',')
 
 
-def get_roles(page, per_page, **kwargs):# TODO role.id这个判断需要走全局配置
+def get_roles(page, per_page, **kwargs):
     pagination = db.session.query(Role)\
-                        .join(Organization, Organization.id == Role.organization_id)\
+                        .join(Group, Group.id == Role.group_id)\
                         .filter(Role.id > ROLE_ADMIN_ID, Role.state == 1)\
                         .order_by(Role.id.desc())
 
-    if kwargs.get('organization_bid'):
-        pagination = pagination.filter(Organization.bid == kwargs.get('organization_bid'))
+    if kwargs.get('group_id'):
+        pagination = pagination.filter(Group.id == kwargs.get('group_id'))
     if kwargs.get('name'):
         pagination = pagination.filter(Role.name == kwargs.get('name'))
 
@@ -219,7 +207,7 @@ def del_role(_id):
     db.session.commit()
 
 
-def modify_role(_id, organization_id, **kwargs):
+def modify_role(_id, group_id, **kwargs):
     name = kwargs.get('name')
     menu = kwargs.get('menu')
     state = kwargs.get('state')
@@ -229,13 +217,13 @@ def modify_role(_id, organization_id, **kwargs):
         r = Role()
 
     if name and r.name != name:
-        r1 = db.session.query(Role).filter(Role.name==name, Role.organization_id==organization_id, Role.state==1).first()
+        r1 = db.session.query(Role).filter(Role.name==name, Role.group_id==group_id, Role.state==1).first()
         if r1:
             raise UserError(message= '此角色已存在!')
 
         r.name = name
     r.menu = menu
-    r.organization_id = organization_id
+    r.group_id = group_id
     r.state = state or r.state
     db.session.add(r)
     db.session.commit()
@@ -246,21 +234,17 @@ def modify_role(_id, organization_id, **kwargs):
     return r
 
 
-def get_organization_by_bid(bid):
-    return db.session.query(Organization).filter(Organization.bid == bid).first()
-
-
-def get_organizations(page, per_page, **kwargs):
-    pagination = db.session.query(Organization).filter(Organization.id > ORGANIZATION_SYS_ADMIN_ID).order_by(Organization.id.desc())
-    if kwargs.get('organization_bid'):
-        pagination = pagination.filter(Organization.bid == kwargs.get('organization_bid'))
+def get_groups(page, per_page, **kwargs):
+    pagination = db.session.query(Group).filter(Group.id > GROUP_SYS_ADMIN_ID).order_by(Group.id.desc())
+    if kwargs.get('group_id'):
+        pagination = pagination.filter(Group.id == kwargs.get('group_id'))
     if kwargs.get('name'):
-        pagination = pagination.filter(Organization.name == kwargs.get('name'))
+        pagination = pagination.filter(Group.name == kwargs.get('name'))
     pagination = pagination.paginate(page=page, per_page=per_page, error_out=False)
     ret = []
     for item in pagination.items:
         ret.append({
-                "bid":  item.bid,
+                "id":  item.id,
                 "name": item.name,
                 "kind": item.kind,
             })
@@ -268,38 +252,34 @@ def get_organizations(page, per_page, **kwargs):
     return pagination.total, ret
 
 
-def modify_organization(**kwargs):
-    organization_id = kwargs.get('organization_id')
-    organization_bid = kwargs.get('organization_bid')
+def modify_group(**kwargs):
+    group_id = kwargs.get('group_id')
     name = kwargs.get('name', '')
     kind = kwargs.get('kind', '')
-    organization = None
+    group = None
 
-    if organization_id:
-        organization = Organization.get(organization_id)
-    elif organization_bid:
-        organization = Organization.get_by_bid(organization_bid)
+    if group_id:
+        group = Group.get(group_id)
 
-    if not organization:
-        organization = Organization()
-        organization.bid = str(snow.get_id())
+    if not group:
+        group = Group()
 
-    if name and organization.name != name:
-        organization.name = name
+    if name and group.name != name:
+        group.name = name
 
-    if kind and organization.kind != kind:
-        organization.kind = kind
+    if kind and group.kind != kind:
+        group.kind = kind
 
-    db.session.add(organization)
+    db.session.add(group)
     db.session.commit()
-    return True, organization
+    return group
 
 
 def check_email_phone(**kwargs):
-    username = kwargs.get('username')
+    name = kwargs.get('name')
     email = kwargs.get('email')
     phone = kwargs.get('phone')
-    user = User.query.filter(User.username==username,
+    user = User.query.filter(User.name==name,
                             or_(User.email==email, User.phone==phone))\
                      .first()
     if not user:

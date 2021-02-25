@@ -11,63 +11,57 @@ class User(db.Model):
     __tablename__ = 'user'
     __table_args__ = {"useexisting":True, 'mysql_charset':'utf8', 'mysql_engine':'InnoDB'}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    bid = db.Column(BigInteger, nullable=False, comment="唯一id")
-    username = db.Column(String(64), comment="登陆名")
-    name = db.Column(String(32), comment="真实姓名")
-    password = db.Column(String(128))
-    email = db.Column(String(32), comment="email")
-    phone = db.Column(String(11))
-    role_id = Column(Integer, ForeignKey('role.id'))
-    organization_id = Column(Integer, ForeignKey('organization.id'))
-    update_time = db.Column(DateTime, default=func.now(), onupdate=func.now())
-    create_time = db.Column(DateTime, default=func.now())
-    state = db.Column(mysql.TINYINT(display_width=1), nullable=False, default=1, comment=u"0:无效,1:有效,2:已拉黑")
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    name = db.Column("name", String(32), comment="姓名")
+    password = db.Column("password", String(128))
+    avatar = db.Column("avatar", String(128), comment="头像")
+    email = db.Column("email", String(64), comment="email")
+    phone = db.Column("phone", String(11))
+    role_id = Column("role_id", Integer, ForeignKey('role.id'))
+    group_id = Column("group_id", Integer, ForeignKey('group.id'))
+    updated_at = db.Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    created_at = db.Column("created_at", DateTime, default=func.now())
+    state = db.Column("state", mysql.TINYINT(display_width=1), nullable=False, default=1, comment=u"0:无效,1:有效,2:已拉黑")
 
     def __repr__(self):
-        return '<id: %s username %r>' % (self.id, self.username)
+        return '<id: %s name %r>' % (self.id, self.name)
 
     @classmethod
     def get(cls, _id):
         return db.session.query(User).get({'id': _id})
 
-    @classmethod
-    def get_by_bid(cls, bid):
-        return db.session.query(User).filter(User.bid == bid).first()
 
 # 组织
-class Organization(db.Model):
-    __tablename__ = 'organization'
+class Group(db.Model):
+    __tablename__ = 'group'
     __table_args__ = {"useexisting":True, 'mysql_charset':'utf8', 'mysql_engine':'InnoDB'}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    bid = db.Column(BigInteger, nullable=False, comment="唯一id")
-    name = db.Column(String(32))
-    kind = db.Column(mysql.TINYINT(display_width=1), nullable=False, default=1, comment="1:个人,2:团体")
-    update_time = db.Column(DateTime, default=func.now(), onupdate=func.now())
-    create_time = db.Column(DateTime, default=func.now())
-    state = db.Column(mysql.TINYINT(display_width=1), nullable=False, default=1, comment="0:无效,1:有效,2:已删除")
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    name = db.Column("name", String(32))
+    kind = db.Column("kind", mysql.TINYINT(display_width=1), nullable=False, default=1, comment="1:个人,2:团体")
+    updated_at = db.Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    created_at = db.Column("created_at", DateTime, default=func.now())
+    state = db.Column("state", mysql.TINYINT(display_width=1), nullable=False, default=1, comment="0:无效,1:有效,2:已删除")
 
-    users = db.relationship('User', backref='organization')
+    users = db.relationship('User', backref='group')
 
     @classmethod
     def get(cls, _id):
-        return db.session.query(Organization).get({'id': _id})
+        return db.session.query(Group).get({'id': _id})
 
-    @classmethod
-    def get_by_bid(cls, bid):
-        return db.session.query(Organization).filter(Organization.bid == bid).first()
 
 # 角色
 class Role(db.Model):
     __tablename__ = 'role'
     __table_args__ = {"useexisting":True, 'mysql_charset':'utf8', 'mysql_engine':'InnoDB'}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(45), nullable=False, default="", comment=u"")
-    menu = Column(Text, nullable=True, default="", comment=u"")
-    organization_id = Column(Integer)
-    state = Column(mysql.TINYINT(display_width=1), nullable=False, default=1, comment="0:无效,1:有效,2:已删除")
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    name = Column("name", String(45), nullable=False, default="", comment=u"")
+    menu = Column("menu", Text, nullable=True, default="", comment=u"")
+    group_id = Column("group_id", Integer)
+    updated_at = db.Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    created_at = db.Column("created_at", DateTime, default=func.now())
+    state = Column("state", mysql.TINYINT(display_width=1), nullable=False, default=1, comment="0:无效,1:有效,2:已删除")
 
     users = db.relationship('User', backref='role')
 
