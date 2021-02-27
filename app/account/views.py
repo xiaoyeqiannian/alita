@@ -191,14 +191,14 @@ def user_modify():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {Number[]} user_ids 删除账号的数组,用户的id
+@apiParam {Number[]} ids 删除账号的数组,用户的id
 """
 @mod.route('/del', methods=['POST'])
 @except_handler
 @jwt_required
 @verify_permission
 def users_del():
-    del_user(request.json.get('user_ids'))
+    del_user(request.json.get('ids'))
 
 
 """
@@ -283,14 +283,14 @@ def role_modify():
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {Number} id 角色id
+@apiParam {Number[]} ids 角色ids
 """
 @mod.route('/role/del', methods=['POST'])
 @except_handler
 @jwt_required
 @verify_permission
 def role_del():
-    del_role(request.json.get('id'))
+    del_role(request.json.get('ids'))
 
 
 """
@@ -385,7 +385,6 @@ def password_modify():
 def password_forget():
     name = request.json.get('name')
     email = request.json.get('email')
-    phone = request.json.get('phone')
     check_email_phone(name=name, email=email, phone=phone)
     send_code(email=email, phone=phone)
 

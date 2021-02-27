@@ -85,19 +85,19 @@ def get_users(page, per_page, **kwargs):
     return pagination.total, ret
 
 
-def del_user(user_ids):
-    if not user_ids or not isinstance(user_ids, list):
+def del_user(ids):
+    if not ids or not isinstance(ids, list):
         raise ArgumentError(message= '参数异常')
 
-    for _id in user_ids:
+    for _id in ids:
         if not _id:
             continue
         
-        u = User.query.filter_by(id = _id, state = 1).first()
+        u = User.query.filter_by(id = _id, state = STATUS_VALID).first()
         if not u:
             continue
 
-        u.state = 0
+        u.state = STATUS_DELETED
         db.session.add(u)
         db.session.commit()
     return True, ''
@@ -197,14 +197,21 @@ def get_roles(page, per_page, **kwargs):
     return pagination.total, ret
 
 
-def del_role(_id):
-    r = Role.get(_id)
-    if not r:
-        raise UserError(message= '未找到此权限')
+def del_role(ids):
+    if not ids or not isinstance(ids, list):
+        raise ArgumentError(message= '参数异常')
 
-    r.state = 0
-    db.session.add(r)
-    db.session.commit()
+    for _id in ids:
+        if not _id:
+            continue
+        
+        r = Role.query.filter_by(id = _id, state = STATUS_VALID).first()
+        if not r:
+            continue
+
+        r.state = STATUS_DELETED
+        db.session.add(r)
+        db.session.commit()
 
 
 def modify_role(_id, group_id, **kwargs):

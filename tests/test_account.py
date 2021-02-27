@@ -24,7 +24,6 @@ class TestAccount(BaseTest):
         self.assertTrue(len(ret['data']['items']) > 0)
         self.login_user()
         for item in ret['data']['items']:
-            print(TestAccount.group_id, item.get('id'))
             if int(TestAccount.group_id) == int(item.get('id')):
                 self.assertEqual(item.get('name'), "Test1")
                 self.assertEqual(item.get('kind'), 2)
@@ -34,27 +33,26 @@ class TestAccount(BaseTest):
     
     def test_role(self):
         print('----------', sys._getframe().f_code.co_name)
-        role_modified = False
-        for i in range(2):
-            ret = self.post("/account/role/modify", {"name": "test", "menu": "page1,page2", "permissions":[]})
-            if ret['code'] == RETCODE.OK:
-                role_modified = True
-                break
-
-            ret = self.get("/account/role/list", {"page": 1, "per_page": 1000})
+        self.post("/account/role/modify", {"name": "test", "menu": "page1,page2", "permissions":[]})
+        ret = self.get("/account/role/list", {"page": 1, "per_page": 1000})
+        self.assertEqual(ret['code'], RETCODE.OK)
+        self.assertTrue(len(ret['data']['items']) > 0)
+        todel = []
+        for item in ret['data']['items']:
+            if item.get('name') == "test":
+                todel.append(item.get('id'))
+        if todel:
+            ret = self.post("/account/role/del", {"ids": todel})
             self.assertEqual(ret['code'], RETCODE.OK)
-            self.assertTrue(len(ret['data']['items']) > 0)
-            for item in ret['data']['items']:
-                if item.get('name') == "test":
-                    ret = self.post("/account/role/del", {"id": item.get('id')})
-                    self.assertEqual(ret['code'], RETCODE.OK)
-        self.assertTrue(role_modified)
             
 
     def test_add_sub_account(self):
         print('----------', sys._getframe().f_code.co_name)
         ret = self.get("/account/role/list", {})
         self.assertEqual(ret['code'], RETCODE.OK)
+        if len(ret['data']['items']) <= 0:
+            self.post("/account/role/modify", {"name": "test", "menu": "page1,page2", "permissions":[]})
+            ret = self.get("/account/role/list", {})
 
         role_id = ret['data']['items'][0]['id']# 随便取一个角色ID即可
         ret = self.post("/account/sub/add", {"name": "sub_account", "password": self.test_password, "role_id": role_id})
@@ -63,10 +61,13 @@ class TestAccount(BaseTest):
         self.assertEqual(ret['code'], RETCODE.OK)
         self.assertTrue(len(ret['data']['items']) > 0)
         self.login_user()
+        todel = []
         for item in ret['data']['items']:
             if item.get('name') == "sub_account":
-                ret = self.post("/account/del", {"user_ids": [item.get('id')]})
-                self.assertEqual(ret['code'], RETCODE.OK)
+                todel.append(item.get('id'))
+        if todel:
+            ret = self.post("/account/del", {"ids": todel})
+            self.assertEqual(ret['code'], RETCODE.OK)
     
     def test_password_modify(self):
         print('----------', sys._getframe().f_code.co_name)
