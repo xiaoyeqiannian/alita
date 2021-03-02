@@ -1,10 +1,5 @@
-#coding: utf-8
-
 import time
 import datetime
-import locale
-
-from contextlib import contextmanager
 
 def format_datetime(datetime):
     try:
@@ -13,49 +8,14 @@ def format_datetime(datetime):
     except:
         return None
 
+
 def format_date_normal(datetime):
     try:
         fmt = '%Y-%m-%d'
-        return datetime and datetime.strftime(fmt) or ''
+        return datetime.strftime(fmt)
     except:
         return None
 
-def date2week(dt):
-    # return （2107, 1, 1） 哪一年的 第几周 第几天
-    return dt.isocalendar()
-
-def date2weeknumber(a_dt):
-    y = date2string(a_dt, "%Y")
-    if int(a_dt.strftime("%W")) == 0:
-        yes_y = int(y)-1
-        t_dt = datetime.datetime.strptime("{0}-12-31".format(yes_y), "%Y-%m-%d")
-        temp_week = t_dt.strftime("%W")
-
-        return (yes_y, temp_week, 0)
-    else:
-        temp_week = a_dt.strftime("%W")
-        return (y, temp_week, 0)
-
-
-def string2date(dt_str, format="%Y-%m-%d %H:%M:%S"):
-    return datetime.datetime.strptime(dt_str, format)
-
-
-def tms2date(tms):
-    dateArray = datetime.datetime.utcfromtimestamp(tms)
-    temp_date = dateArray + datetime.timedelta(hours=8)
-    otherStyleTime = temp_date.strftime("%Y-%m-%d %H:%M:%S")
-    return otherStyleTime
-
-def date2tms(dt):
-    return int(time.mktime(dt.timetuple()))
-
-
-def datetime2date(dt):
-    return datetime.date(dt.year, dt.month, dt.day)
-
-def datetime2time(dt):
-    return datetime.time(dt.hour, dt.minute, dt.second)
 
 # 计算自然周第一天、自然月第一天和每天的凌晨时间戳
 # t = time.time()
@@ -110,6 +70,15 @@ def get_month_begin(ts = time.time(),N = 0):
             t = get_month_begin(t,real_month)
     return t
 
+
+"""
+>>> n = datetime.strptime("2021-02-28", "%Y-%m-%d")
+>>> datetime_offset_by_month(n, 1)
+datetime.datetime(2021, 3, 31, 0, 0)
+>>> n = datetime.strptime("2021-03-31", "%Y-%m-%d")
+>>> datetime_offset_by_month(n, 1)
+datetime.datetime(2021, 4, 30, 0, 0)
+"""
 def datetime_offset_by_month(datetime1, n = 1):
 
     # create a shortcut object for one day
@@ -155,6 +124,7 @@ def datetime_offset_by_month(datetime1, n = 1):
 
     return datetime2.replace(day = datetime1.day)
 
+
 '''''
 * datestr转换成secs
 * 将时间字符串转化为秒("2012-07-20 00:00:00"->1342713600.0)
@@ -183,109 +153,10 @@ def datestr2secs(datestr):
 def secs2datestr(secs):
     if int(secs) < 0:
         return ""
+
     return str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(secs)))
-
-@contextmanager
-def use_locale(name):
-    saved = locale.setlocale(locale.LC_ALL)
-    try:
-        yield locale.setlocale(locale.LC_ALL, name)
-        # print 'good locale', name
-    finally:
-        locale.setlocale(locale.LC_ALL, saved)
-
-
-def format(value):
-    '''Jinja2 Template custom filter'''
-    return friendly(value)
-
-def friendly(dt, now=None):
-    '''
-    >>> now = datetime.datetime(2016, 10, 18, 13, 51)
-    >>> type(now.strftime(u'%A %H:%M'))
-    <type 'str'>
-    >>> type(now.strftime('%A %H:%M'))
-    <type 'str'>
-    >>> now
-    datetime.datetime(2016, 10, 18, 13, 51)
-    >>> print friendly(datetime.datetime(2002, 10, 25), now)
-    2002/10/25 00:00
-    >>> print friendly(datetime.datetime(2016, 10, 16, 13, 51), now).encode('utf-8')
-    星期日 13:51
-    >>> print friendly(datetime.datetime(2016, 10, 15, 13, 51), now).encode('utf-8')
-    星期六 13:51
-    >>> print friendly(datetime.datetime(2016, 10, 23, 13, 51), now).encode('utf-8')
-    星期日 13:51
-    >>> print friendly(datetime.datetime(2016, 10, 24, 13, 51), now).encode('utf-8')
-    星期一 13:51
-    >>> print friendly(datetime.datetime(2016, 10, 18, 13, 51), now)
-    13:51
-    >>> print friendly(datetime.datetime(2016, 10, 18, 10), now)
-    10:00
-    >>> print friendly(datetime.datetime(2016, 10, 18, 11, 51), now)
-    11:51
-    >>> print friendly(datetime.datetime(2016, 10, 18, 14, 51, 20), now).encode('utf-8')
-    星期二 14:51
-    '''
-    if now is None:
-        now = datetime.datetime.now()
-    delta = now - dt
-
-    with use_locale('zh_CN.UTF-8'):
-        if delta.days >= 7 or delta.days <= -7:
-            # 年月日 时间
-            return dt.strftime('%Y/%m/%d %H:%M')
-        elif delta.days and -7 < delta.days < 7:
-            # 星期几 时间
-            fmt = u'%A %H:%M'.encode('utf-8')
-            x = dt.strftime(fmt)
-            return unicode(x, 'utf-8')
-        else:
-            return dt.strftime('%H:%M')
-
-def now():
-    dt = datetime.datetime.now()
-    return dt
 
 
 def today():
     now = datetime.datetime.now()
-    when = datetime.datetime(year=now.year, month=now.month, day=now.day)
-    return when
-
-
-def getYearWeek(strdate):
-    date = datetime.datetime.strptime(strdate, '%Y-%m-%d')
-    YearWeek = date.isocalendar()
-    return YearWeek
-
-def getNowYearWeek():
-    # 当前时间年第几周的计算
-    timenow = datetime.datetime.now()
-    NowYearWeek = timenow.isocalendar()
-    return NowYearWeek
-
-def getDayInweekMonday():
-    week_num = datetime.datetime.now().weekday()
-    Monday = datetime.datetime.now() + datetime.timedelta(days=-week_num)
-    Monday = str(Monday)[0:10]
-    return Monday
-
-# weekflag格式为"2016#53"（即2016年第53周）
-def getWeekFirstday(weekflag):
-    year_str = weekflag[0:4]  # 取到年份
-    week_str = weekflag[5:]  # 取到周
-    if int(week_str)>=53:
-        Monday = "Error,Week Num greater than 53!"
-    else:
-        yearstart_str = year_str + '0101'  # 当年第一天
-        yearstart = datetime.datetime.strptime(yearstart_str, '%Y%m%d')  # 格式化为日期格式
-        yearstartcalendarmsg = yearstart.isocalendar()  # 当年第一天的周信息
-        yearstartweekday = yearstartcalendarmsg[2]
-        yearstartyear = yearstartcalendarmsg[0]
-        if yearstartyear < int(year_str):
-            daydelat = (8 - int(yearstartweekday)) + (int(week_str) - 1) * 7
-        else:
-            daydelat = (8 - int(yearstartweekday)) + (int(week_str) - 2) * 7
-        Monday = (yearstart + datetime.timedelta(days=daydelat)).date()
-    return Monday
+    return datetime.datetime(year=now.year, month=now.month, day=now.day)

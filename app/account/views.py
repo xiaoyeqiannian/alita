@@ -385,6 +385,7 @@ def password_modify():
 def password_forget():
     name = request.json.get('name')
     email = request.json.get('email')
+    phone = request.json.get('phone')
     check_email_phone(name=name, email=email, phone=phone)
     send_code(email=email, phone=phone)
 
