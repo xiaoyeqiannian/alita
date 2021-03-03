@@ -21,6 +21,7 @@ class BaseTest(unittest.TestCase):
     HOST = "http://127.0.0.1:5000"
     
     group_id = -1
+    user_id = -1
 
     @classmethod
     def setUpClass(self):
@@ -46,28 +47,29 @@ class BaseTest(unittest.TestCase):
     def token_decode(self, token):
         _, info, _ = token.split('.')
         info = base64.b64decode(info + '='*3).decode("utf-8")
-        print(info)
         return json.loads(info)['identity']
 
+    def b64_encode(self, s):
+        return base64.b64encode(s.encode("utf8")).decode('utf8')
 
     def login_root(self):
         global token
-        ret = self.post('/account/login', {"name": "root",
-                                   "password": (base64.b64encode("123456".encode("utf8"))).decode('utf8')})
+        ret = self.post('/account/login', {"name": "root", "password": self.b64_encode("123456")})
         if ret['code'] == RETCODE.OK:
             token = ret['data']['token']
             user_info = self.token_decode(token)
+            BaseTest.user_id = user_info.get('user_id')
             BaseTest.group_id = user_info.get('group_id')
             print('get user info:', user_info)
 
 
     def login_user(self):
         global token
-        ret = self.post('/account/login', {"name": self.test_user_name,
-                                   "password": (base64.b64encode(self.test_password.encode("utf8"))).decode('utf8')})
+        ret = self.post('/account/login', {"name": self.test_user_name, "password": self.b64_encode(self.test_password)})
         if ret['code'] == RETCODE.OK:
             token = ret['data']['token']
             user_info = self.token_decode(token)
+            BaseTest.user_id = user_info.get('user_id')
             BaseTest.group_id = user_info.get('group_id')
             print('get user info:', user_info)
 

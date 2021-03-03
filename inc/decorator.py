@@ -63,29 +63,28 @@ def jwt_required(fn):
     def wapper(*args, **kwargs):
         auth_header_value = request.headers.get('Authorization', None)
         if not auth_header_value:
-            raise LoginError(message = 'Authorization缺失!')
+            raise LoginError(message = 'Require authorization!')
 
         parts = auth_header_value.split()
         if len(parts) == 1:
-            raise LoginError(message = 'Token缺失!')
+            raise LoginError(message = 'Require token!')
 
         elif len(parts) > 2:
-            raise LoginError(message = 'Token无效!')
+            raise LoginError(message = 'Token invalid!')
 
         token = parts[1]
         if token is None:
-            raise LoginError(message = 'Token异常!')
+            raise LoginError(message = 'Token error!')
 
         try:
             payload = jwt_decode(token)
         except jwt.InvalidTokenError as e:
-            raise LoginError(message="Token失效")
-
-        _request_ctx_stack.top.current_identity = payload.get('identity')
+            raise LoginError(message="Token invalid!")
 
         if payload.get('identity') is None:
-            raise LoginError(message = '用户不存在!')
+            raise LoginError(message = "Identity is None!")
 
+        _request_ctx_stack.top.current_identity = payload.get('identity')
         return fn(*args, **kwargs)
     return wapper
 
@@ -99,7 +98,7 @@ def verify_permission(func):
         if isok:
             return func(*args, **kwargs)
         else:
-            return jsonify(code=RETCODE.ROLEERR, msg='您无此操作权限,请联系管理员!')
+            return jsonify(code=RETCODE.ROLEERR, msg="Permission error!")
 
     return wapper
 
@@ -132,9 +131,6 @@ def except_handler(func):
 
         except HTTPException as e:  # abort 404/405/...
             raise e
-
-        except NotImplementedError as e:
-            return jsonify(UnderDevelopment().to_dict())
 
         except Exception as e:
             return jsonify(UnknownException(e).to_dict())

@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import base64
 import unittest
 
 from base_test import BaseTest
@@ -15,7 +14,7 @@ class TestAccount(BaseTest):
     def test_group(self):
         print('----------', sys._getframe().f_code.co_name)
         group_checked = False
-        ret = self.post("/account/group/modify", {"name": "Test1", "kind": 2})
+        ret = self.post(f"/account/group/{self.group_id}/modify", {"name": "Test1", "kind": 2})
         self.assertEqual(ret['code'], RETCODE.OK)
 
         self.login_root()
@@ -55,7 +54,9 @@ class TestAccount(BaseTest):
             ret = self.get("/account/role/list", {})
 
         role_id = ret['data']['items'][0]['id']# 随便取一个角色ID即可
-        ret = self.post("/account/sub/add", {"name": "sub_account", "password": self.test_password, "role_id": role_id})
+        ret = self.post("/account/sub/add", {"name": "sub_account",
+                                            "password": self.b64_encode(self.test_password),
+                                            "role_id": role_id})
         self.login_root()
         ret = self.get("/account/list", {})
         self.assertEqual(ret['code'], RETCODE.OK)
@@ -72,17 +73,17 @@ class TestAccount(BaseTest):
     def test_password_modify(self):
         print('----------', sys._getframe().f_code.co_name)
         ret = self.post("/account/password/modify",
-                    {"password": base64.b64encode(self.test_password.encode("utf8")).decode('utf8'),
-                    "new_password": base64.b64encode(self.test_new_password.encode("utf8")).decode('utf8')})
+                    {"password": self.b64_encode(self.test_password),
+                    "new_password": self.b64_encode(self.test_new_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
         ret = self.post("/account/password/modify", 
-                    {"password": base64.b64encode(self.test_new_password.encode("utf8")).decode('utf8'),
-                    "new_password": base64.b64encode(self.test_password.encode("utf8")).decode('utf8')})
+                    {"password": self.b64_encode(self.test_new_password),
+                    "new_password": self.b64_encode(self.test_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
 
     def test_user_modify(self):
         print('----------', sys._getframe().f_code.co_name)
-        ret = self.post("/account/modify", {"email": self.test_email})
+        ret = self.post(f"/account/{self.user_id}/modify", {"email": self.test_email})
         self.assertEqual(ret['code'], RETCODE.OK)
 
     def test_user_permission(self):
@@ -116,15 +117,15 @@ class TestAccount(BaseTest):
         ret = self.post("/account/password/forget", {"name":self.test_user_name, "email":self.test_email})
         self.assertEqual(ret['code'], RETCODE.OK)
         ret = self.post("/account/code/verify", {"name":self.test_user_name, "email":self.test_email, "code":"666888",
-                                                "password": base64.b64encode(self.test_new_password.encode("utf8")).decode('utf8')})
+                                                "new_password": self.b64_encode(self.test_new_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
         ret = self.post('/account/login', {"name": self.test_user_name,
-                                            "password": base64.b64encode(self.test_new_password.encode("utf8")).decode('utf8')})
+                                            "password": self.b64_encode(self.test_new_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
-        ret = self.post("/account/password/modify", {"password": base64.b64encode(self.test_new_password.encode("utf8")).decode('utf8'),
-                                                    "new_password": base64.b64encode(self.test_password.encode("utf8")).decode('utf8')})
+        ret = self.post("/account/password/modify", {"password": self.b64_encode(self.test_new_password),
+                                                    "new_password": self.b64_encode(self.test_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
-        ret = self.post('/account/login', {"name": self.test_user_name, "password": base64.b64encode(self.test_password.encode("utf8")).decode('utf8')})
+        ret = self.post('/account/login', {"name": self.test_user_name, "password": self.b64_encode(self.test_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
 
 

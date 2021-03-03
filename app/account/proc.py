@@ -17,20 +17,12 @@ from inc.exceptions import ArgumentError, ReqError, LoginError, UserError
 
 
 def get_user_by_name(name):
-    return User.query.filter(User.name == name, User.state == 1).first()
-
-
-def get_user_by_email_or_phone(email, phone):
-    user = User.query.filter(User.email==email, User.state==1).first()
-    if user:
-        return user
-
-    return User.query.filter(User.phone==phone, User.state==1).first()
+    return User.query.filter(User.name==name, User.state==STATUS_VALID).first()
 
 
 def user_login(user, password=None):
     if password:
-        ret = check_password_hash(user.password, base64.b64decode(password).decode('utf8'))
+        ret = check_password_hash(user.password, b64_decode(password))
         if not ret:
             raise UserError(message = 'Password error!')
     
@@ -70,9 +62,9 @@ def get_users(page, per_page, **kwargs):
         pagination = pagination.filter(User.phone.like("%{}%".format(kwargs.get('phone'))))
 
     pagination = pagination.paginate(page=page, per_page=per_page, error_out=False)
-    ret = []
+    items = []
     for item in pagination.items:
-        ret.append({
+        items.append({
                 "id":                item[0],
                 "name":              item[1],
                 "email":             item[2],
@@ -81,8 +73,7 @@ def get_users(page, per_page, **kwargs):
                 "role_name":         item[5],
                 "group_name":        item[6],
             })
-
-    return pagination.total, ret
+    return {'items': items, 'total': pagination.total, 'page': page, 'per_page': per_page}
 
 
 def del_user(ids):
@@ -103,58 +94,73 @@ def del_user(ids):
     return True, ''
 
 
+def username_is_existed(name):
+    return db.session.query(User).filter(User.name==name, User.state==STATUS_VALID).first()
+
+
+def b64_decode(s):
+    return base64.b64decode(s).decode('utf8')
+
+
 def modify_user(_id, **kwargs):
-    password = kwargs.get('password')
-    new_password = kwargs.get('new_password')
-    verify_code = kwargs.get('verify_code')
-    name = kwargs.get('name')
-    email = kwargs.get('email', '')
-    phone = kwargs.get('phone', '')
-    state = kwargs.get('state')
-    role_id = kwargs.get('role_id')
-    group_id = kwargs.get('group_id')
     c = User.query.filter_by(id = _id).first()
     if not c:
-        c = User(state = 1)
-        # 新注册用户分配admin角色及权限,admin权限默认初始化为1,请确认
-        c.role_id = 1
+        raise UserError(message= "The user is not existed!")
 
+    name = kwargs.get("name")
     if name and name != c.name:# name用于登陆，必须唯一
-        m = db.session.query(User).filter(User.name==name, User.state==1).first()
-        if m:
-            raise UserError(message= 'The user is existed')
+        if username_is_existed(name):
+            raise UserError(message= "The username is existed!")
 
-        c.name = name
+        c.name = name.strip()
 
-    if phone:
-        c.phone = phone
+    if kwargs.get("phone", ""):
+        c.phone = kwargs.get("phone", "").strip()
 
-    if new_password:# 密码修改
-        if verify_code:
-            if not check_code(email = email, phone = phone, code = code):
-                raise ArgumentError(message= 'Use the right code')
+    password = kwargs.get("password")
+    new_password = kwargs.get("new_password")
+    if new_password:
+        if password and not check_password_hash(c.password, b64_decode(password)):
+            raise ArgumentError(message= 'Password error!')
 
-        elif password:
-            print(c.password, base64.b64decode(password).decode('utf8'))
-            if not check_password_hash(c.password, base64.b64decode(password).decode('utf8')):
-                raise ArgumentError(message= 'Password error')
+        c.password = generate_password_hash(b64_decode(new_password))
 
-        c.password = generate_password_hash(base64.b64decode(new_password).decode('utf8'))
+    if kwargs.get("email", ""):
+        c.email = kwargs.get("email", "").strip()
 
-    elif password:
-        c.password = generate_password_hash(base64.b64decode(password).decode('utf8'))
+    if kwargs.get('state'):
+        c.state = kwargs.get('state')
 
-    if email:
-        c.email = email
+    if kwargs.get('role_id'):
+        c.role_id = kwargs.get('role_id')
 
-    if state:
-        c.state = state
+    if kwargs.get('group_id'):
+        c.group_id = kwargs.get('group_id')
+    db.session.add(c)
+    db.session.commit()
+    return c
 
-    if role_id:
-        c.role_id = role_id
 
-    if group_id:
-        c.group_id = group_id
+def create_user(**kwargs):
+    name =     kwargs.get("name")
+    password = kwargs.get("password")
+    group_id = kwargs.get('group_id')
+    role_id =  kwargs.get('role_id')
+    if not name or not password or not group_id or not role_id:
+        raise ArgumentError
+
+    if username_is_existed(name):
+        raise UserError(message= "The user is existed!")
+
+    c = User(state = STATUS_VALID)
+    c.name = name.strip()
+    c.role_id = role_id
+    c.group_id = group_id
+    c.password = generate_password_hash(b64_decode(password))
+    if kwargs.get("phone"):
+        c.phone = kwargs.get("phone")
+    if kwargs.get("email"):
+        c.email = kwargs.get("email")
     db.session.add(c)
     db.session.commit()
     return c
@@ -184,23 +190,20 @@ def get_roles(page, per_page, **kwargs):
         pagination = pagination.filter(Role.name == kwargs.get('name'))
 
     pagination = pagination.paginate(page=page, per_page=per_page, error_out=False)
-    ret = []
+    items = []
     for item in pagination.items:
         permissions = rbac.get_filtered_policy(0, str(item.id))
-        ret.append({
+        items.append({
                 "id": item.id,
                 "name": item.name,
                 "menu": item.menu and item.menu.split(','),
                 "permissions": [p[1] for p in permissions],
             })
 
-    return pagination.total, ret
+    return {'items': items, 'total': pagination.total, 'page': page, 'per_page': per_page}
 
 
 def del_role(ids):
-    if not ids or not isinstance(ids, list):
-        raise ArgumentError(message= '参数异常')
-
     for _id in ids:
         if not _id:
             continue
@@ -248,15 +251,14 @@ def get_groups(page, per_page, **kwargs):
     if kwargs.get('name'):
         pagination = pagination.filter(Group.name == kwargs.get('name'))
     pagination = pagination.paginate(page=page, per_page=per_page, error_out=False)
-    ret = []
+    items = []
     for item in pagination.items:
-        ret.append({
+        items.append({
                 "id":  item.id,
                 "name": item.name,
                 "kind": item.kind,
             })
-
-    return pagination.total, ret
+    return {'items': items, 'total': pagination.total, 'page': page, 'per_page': per_page}
 
 
 def modify_group(**kwargs):
@@ -282,31 +284,24 @@ def modify_group(**kwargs):
     return group
 
 
-def check_email_phone(**kwargs):
+def check_email(**kwargs):
     name = kwargs.get('name')
     email = kwargs.get('email')
-    phone = kwargs.get('phone')
-    user = User.query.filter(User.name==name,
-                            or_(User.email==email, User.phone==phone))\
-                     .first()
-    if not user:
-        raise ArgumentError(message= '手机号或邮箱错误')
+    user = User.query.filter(User.name==name, User.state==STATUS_VALID).first()
+    if not user or user.email != email:
+        raise ArgumentError(message="Email error!")
 
 
 def send_code(**kwargs):
     email = kwargs.get('email')
-    phone = kwargs.get('phone')
     code = ''.join([str(random.randint(0,9)) for i in range(VERIFY_CODE_LENGTH)])
     if email:
         rc.set(email + ":code", code, VERIFY_CODE_EXPIRE_TIME)
         emailer.send(email, '验证码', "您的验证码：" + code)
-    elif phone:
-        pass
 
 
 def check_code(**kwargs):
     email = kwargs.get('email')
-    phone = kwargs.get('phone')
     code = kwargs.get('code')
     if email:
         r_code = rc.get(email + ":code")
@@ -314,4 +309,4 @@ def check_code(**kwargs):
             rc.delete(email + ":code")
             return
 
-    raise ArgumentError(message= '验证码错误')
+    raise ArgumentError(message= "Code error")

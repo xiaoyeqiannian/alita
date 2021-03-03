@@ -30,7 +30,7 @@ def login():
 
     user = get_user_by_name(name)
     if not user:
-        raise LoginError(message='未找到用户')
+        raise LoginError(message="Can't find this user")
 
     token = user_login(user, password)
     return {'token': token.decode('utf8')}
@@ -49,31 +49,32 @@ def login():
 @apiSuccess {Number} id
 @apiSuccess {String} name 用户登陆名称
 """
-@mod.route('/regist', methods=['POST'])
+@mod.route("/regist", methods=["POST"])
 @except_handler
 def regist():
-    name = request.json.get('name')
-    phone = request.json.get('phone')
-    email = request.json.get('email')
-    password = request.json.get('password')
+    name = request.json.get("name")
+    phone = request.json.get("phone")
+    email = request.json.get("email")
+    password = request.json.get("password")
     if not name or not password:
-        raise ArgumentError(message='please input name or password')
+        raise ArgumentError(message="Please input name or password")
 
     user = get_user_by_name(name)
     if user:
-        raise UserError(message='This user is registed')
+        raise UserError(message="This user is registed")
 
-    group = modify_group(name=name, kind=1)
+    group = modify_group(name=name, kind=GROUP_KIND_PERSONAL)
     if not group:
-        raise DataError(message='Group create fail')
+        raise DataError(message="Group create fail")
 
-    modify_user(None,
+    user = create_user(
                 name = name,
                 email = email,
                 phone = phone,
                 password = password,
                 role_id = ROLE_ADMIN_ID,
                 group_id = group.id)
+    return {"id": user.id, "name": user.name}
 
 
 """
@@ -95,25 +96,23 @@ def regist():
 @except_handler
 @jwt_required
 def subaccount_add():
-    name = request.json.get('name')
-    phone = request.json.get('phone')
-    email = request.json.get('email')
-    password = request.json.get('password')
-    role_id = request.json.get('role_id')
-    if not name or not password:
-        raise ArgumentError(message='Please input name and password')
+    name = request.json.get("name")
+    password = request.json.get("password")
+    role_id = request.json.get("role_id")
+    if not name or not password or not role_id:
+        raise ArgumentError
 
     user = get_user_by_name(name)
     if user:
-        raise UserError(message='The user is registed')
+        raise UserError(message="The user is registed")
 
-    modify_user(None,
-                name = name,
-                email = email,
-                phone = phone,
-                password = password,
-                role_id = role_id,
-                group_id = current_identity.get('group_id'))
+    create_user(
+        name = name,
+        email = request.json.get("email"),
+        phone = request.json.get("phone"),
+        password = password,
+        role_id = role_id,
+        group_id = current_identity.get("group_id"))
 
 
 """
@@ -146,44 +145,40 @@ def user_list():
     group_id = current_identity.get('group_id')
     if GROUP_SYS_ADMIN_ID == group_id:
         group_id = request.args.get('group_id', None, type=int)
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    total, items = get_users(page, per_page,
-                            group_id = group_id,
-                            name = request.args.get('name'),
-                            email = request.args.get('email'),
-                            phone = request.args.get('phone'))
-    return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
+    return get_users(
+                request.args.get('page', 1, type=int),
+                request.args.get('per_page', 10, type=int),
+                group_id = group_id,
+                name = request.args.get('name'),
+                email = request.args.get('email'),
+                phone = request.args.get('phone'))
 
 
 """
-@api {post} /account/modify 用户修改
+@api {post} /account/<_id>/modify 用户修改
 @apiDescription 用户对自己账户的修改，admin对子账户的修改
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {Number} user_id 用户id
 @apiParam {String} name 登陆账号
 @apiParam {String} phone 手机号
 @apiParam {String} email 邮箱，如用于找回密码
 @apiParam {String} role_id 角色ID
 @apiParam {String} password 密码，这里主要是admin对子账户的密码重置,用户自己修改密码则需单独页面，调用修改密码接口
 """
-@mod.route('/modify', methods=['POST'])
+@mod.route('/<_id>/modify', methods=['POST'])
 @except_handler
 @jwt_required
-def user_modify():
-    user_id = request.json.get('user_id') or current_identity.get('user_id')
-    if not user_id:
-        raise ArgumentError(message='缺少参数')
+def user_modify(_id):
+    if not _id:
+        raise ArgumentError
 
-    modify_user(user_id,
-                user_id = current_identity.get('user_id'),
-                name = request.json.get('name'),
-                email = request.json.get('email'),
-                phone = request.json.get('phone'),
-                password = request.json.get('password'),
-                role_id = request.json.get('role_id'))
+    modify_user(_id,
+        name = request.json.get('name'),
+        email = request.json.get('email'),
+        phone = request.json.get('phone'),
+        password = request.json.get('password'),
+        role_id = request.json.get('role_id'))
 
 
 """
@@ -244,12 +239,11 @@ def role_list():
     group_id = current_identity.get('group_id')
     if GROUP_SYS_ADMIN_ID == current_identity.get('group_id'):
         group_id = request.args.get('group_id', None, type=int)
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    total, items = get_roles(page, per_page,
-                            group_id = group_id,
-                            name = request.args.get('name'))
-    return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
+    return get_roles(
+                request.args.get('page', 1, type=int),
+                request.args.get('per_page', 10, type=int),
+                group_id = group_id,
+                name = request.args.get('name'))
 
 
 """
@@ -271,11 +265,11 @@ def role_list():
 @verify_permission
 def role_modify():
     modify_role(request.json.get('id'),
-                group_id = current_identity.get('group_id'),
-                name = request.json.get('name'),
-                menu = request.json.get('menu'),
-                permissions = request.json.get('permissions'),
-                state = request.json.get('state'))
+        group_id = current_identity.get('group_id'),
+        name = request.json.get('name'),
+        menu = request.json.get('menu'),
+        permissions = request.json.get('permissions'),
+        state = request.json.get('state'))
 
 
 """
@@ -290,14 +284,21 @@ def role_modify():
 @jwt_required
 @verify_permission
 def role_del():
-    del_role(request.json.get('ids'))
+    ids = request.json.get('ids')
+    if not ids or not isinstance(ids, list):
+        raise ArgumentError
+
+    del_role(ids)
 
 
 """
 @api {get} /account/group/list 获取组织列表
+@apiDescription only sys admin can use
 @apiGroup Account
 @apiVersion 1.0.0
 
+@apiParam {String} name
+@apiParam {Number} group_id
 @apiParam {Number} page 页码，从1开始
 @apiParam {Number} per_page 每页展示条数
 
@@ -315,40 +316,34 @@ def role_del():
 @verify_permission
 def group_list():
     group_id = current_identity.get('group_id')
-    if GROUP_SYS_ADMIN_ID == group_id:
-        group_id = request.args.get('group_id', None, type=int)
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    total, items = get_groups(page, per_page,
-                                    group_id = group_id,
-                                    name = request.args.get('name'))
-    return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
+    if GROUP_SYS_ADMIN_ID != group_id:
+        raise ArgumentError
+
+    return get_groups(
+                request.args.get('page', 1, type=int),
+                request.args.get('per_page', 10, type=int),
+                group_id = request.args.get('group_id'),
+                name = request.args.get('name'))
 
 
 """
-@api {post} /account/group/modify 组织信息修改
+@api {post} /account/group/<_id>/modify 组织信息修改
 @apiGroup Account
 @apiVersion 1.0.0
 
-@apiParam {String} group_id 指定某个组织修改（root下必填，其他用户取所属组织信息）
 @apiParam {String} name 名称
 @apiParam {String} kind 1:个人,2:团体
 """
-@mod.route('/group/modify', methods=['POST'])
+@mod.route('/group/<_id>/modify', methods=['POST'])
 @except_handler
 @jwt_required
 @verify_permission
-def group_modify():
-    if GROUP_SYS_ADMIN_ID == current_identity.get('group_id'):
-        group_id = request.json.get('group_id')
-    else:
-        group_id = current_identity.get("group_id")
-
-    if not group_id:
-        raise ArgumentError(message='参数异常')
+def group_modify(_id):
+    if current_identity.get("group_id") not in (GROUP_SYS_ADMIN_ID, int(_id)):
+        raise ArgumentError
 
     modify_group(
-        group_id = group_id,
+        group_id = _id,
         name = request.json.get('name'),
         kind = request.json.get('kind'))
 
@@ -377,17 +372,15 @@ def password_modify():
 @apiVersion 1.0.0
 
 @apiParam {String} name 登陆名
-@apiParam {String} email 注册时绑定的邮箱（选填）
-@apiParam {String} phone 注册时绑定的手机号（选填）
+@apiParam {String} email 注册时绑定的邮箱
 """
 @mod.route('/password/forget', methods=["POST"])
 @except_handler
 def password_forget():
     name = request.json.get('name')
     email = request.json.get('email')
-    phone = request.json.get('phone')
-    check_email_phone(name=name, email=email, phone=phone)
-    send_code(email=email, phone=phone)
+    check_email(name=name, email=email)
+    send_code(email=email)
 
 
 """
@@ -398,24 +391,24 @@ def password_forget():
 @apiParam {String} name 登录名
 @apiParam {String} email 邮箱（选填）
 @apiParam {String} code 验证码
-@apiParam {String} password 修改后的新密码
+@apiParam {String} new_password 修改后的新密码
 """
 @mod.route('/code/verify', methods=["POST"])
 @except_handler
 def code_verify():
-    name = request.json.get('name', '')
-    email = request.json.get('email', '')
-    code = request.json.get('code')
-    password = request.json.get('password')
-    if not name or not email or not code or not password:
-        raise ArgumentError(message='参数缺失')
+    name = request.json.get("name", "")
+    email = request.json.get("email", "")
+    code = request.json.get("code")
+    new_password = request.json.get("new_password")
+    if not name or not email or not code or not new_password:
+        raise ArgumentError
 
     check_code(email=email, code=code)
     user = get_user_by_name(name)
     if not user:
-        raise UserError(message='未找到此用户')
+        raise UserError(message="Can't find this user")
 
-    modify_user(user.id, password = password)
+    modify_user(user.id, new_password=new_password)
     user_login(user)
 
 
