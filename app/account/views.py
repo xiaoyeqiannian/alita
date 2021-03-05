@@ -1,5 +1,4 @@
 import json
-from werkzeug.security import check_password_hash
 from flask import request, jsonify
 
 from . import mod
@@ -156,7 +155,6 @@ def user_list():
 
 """
 @api {post} /account/<_id>/modify 用户修改
-@apiDescription 用户对自己账户的修改，admin对子账户的修改
 @apiGroup Account
 @apiVersion 1.0.0
 
@@ -164,7 +162,6 @@ def user_list():
 @apiParam {String} phone 手机号
 @apiParam {String} email 邮箱，如用于找回密码
 @apiParam {String} role_id 角色ID
-@apiParam {String} password 密码，这里主要是admin对子账户的密码重置,用户自己修改密码则需单独页面，调用修改密码接口
 """
 @mod.route('/<_id>/modify', methods=['POST'])
 @except_handler
@@ -173,11 +170,14 @@ def user_modify(_id):
     if not _id:
         raise ArgumentError
 
-    modify_user(_id,
+    user = get_user_by_id(_id)
+    if not user:
+        raise UserError(message= "The user is not existed!")
+    
+    modify_user(user,
         name = request.json.get('name'),
         email = request.json.get('email'),
         phone = request.json.get('phone'),
-        password = request.json.get('password'),
         role_id = request.json.get('role_id'))
 
 
@@ -268,7 +268,7 @@ def role_modify():
         group_id = current_identity.get('group_id'),
         name = request.json.get('name'),
         menu = request.json.get('menu'),
-        permissions = request.json.get('permissions'),
+        permissions = request.json.get('permissions', []),
         state = request.json.get('state'))
 
 
@@ -349,7 +349,7 @@ def group_modify(_id):
 
 
 """
-@api {post} /account/password/modify 密码修改
+@api {post} /account/<_id>/password/modify 密码修改
 @apiDescription 用户自己修改
 @apiGroup Account
 @apiVersion 1.0.0
@@ -357,13 +357,16 @@ def group_modify(_id):
 @apiParam {String} password 旧密码
 @apiParam {String} new_password 新密码
 """
-@mod.route('/password/modify', methods=["POST"])
+@mod.route('/<_id>/password/modify', methods=["POST"])
 @except_handler
 @jwt_required
-def password_modify():
-    modify_user(current_identity.get('user_id'),
-                password = request.json.get('password'),
-                new_password = request.json.get('new_password'))
+def password_modify(_id):
+    user = get_user_by_id(_id)
+    if not user:
+        raise UserError(message= "The user is not existed!")
+
+    check_password(user, request.json.get('password'))
+    modify_user(user, new_password = request.json.get('new_password'))
 
 
 """
@@ -408,7 +411,7 @@ def code_verify():
     if not user:
         raise UserError(message="Can't find this user")
 
-    modify_user(user.id, new_password=new_password)
+    modify_user(user, new_password=new_password)
     user_login(user)
 
 

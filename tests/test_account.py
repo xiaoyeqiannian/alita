@@ -40,9 +40,8 @@ class TestAccount(BaseTest):
         for item in ret['data']['items']:
             if item.get('name') == "test":
                 todel.append(item.get('id'))
-        if todel:
-            ret = self.post("/account/role/del", {"ids": todel})
-            self.assertEqual(ret['code'], RETCODE.OK)
+        ret = self.post("/account/role/del", {"ids": todel})
+        self.assertEqual(ret['code'], RETCODE.OK)
             
 
     def test_add_sub_account(self):
@@ -65,18 +64,18 @@ class TestAccount(BaseTest):
         todel = []
         for item in ret['data']['items']:
             if item.get('name') == "sub_account":
-                todel.append(item.get('id'))
+                todel.append(item.get('bid'))
         if todel:
-            ret = self.post("/account/del", {"ids": todel})
+            ret = self.post("/account/del", {"bids": todel})
             self.assertEqual(ret['code'], RETCODE.OK)
     
     def test_password_modify(self):
         print('----------', sys._getframe().f_code.co_name)
-        ret = self.post("/account/password/modify",
+        ret = self.post(f"/account/{self.user_id}/password/modify",
                     {"password": self.b64_encode(self.test_password),
                     "new_password": self.b64_encode(self.test_new_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
-        ret = self.post("/account/password/modify", 
+        ret = self.post(f"/account/{self.user_id}/password/modify",
                     {"password": self.b64_encode(self.test_new_password),
                     "new_password": self.b64_encode(self.test_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
@@ -122,7 +121,7 @@ class TestAccount(BaseTest):
         ret = self.post('/account/login', {"name": self.test_user_name,
                                             "password": self.b64_encode(self.test_new_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
-        ret = self.post("/account/password/modify", {"password": self.b64_encode(self.test_new_password),
+        ret = self.post(f"/account/{self.user_id}/password/modify", {"password": self.b64_encode(self.test_new_password),
                                                     "new_password": self.b64_encode(self.test_password)})
         self.assertEqual(ret['code'], RETCODE.OK)
         ret = self.post('/account/login', {"name": self.test_user_name, "password": self.b64_encode(self.test_password)})

@@ -17,10 +17,17 @@ from inc.exceptions import ArgumentError, ReqError, LoginError, UserError
 
 
 def get_user_by_name(name):
-    return User.query.filter(User.name==name, User.state==STATUS_VALID).first()
+    return User.query.filter(User.name==name, User.state==STATE_VALID).first()
+
+
+def get_user_by_id(_id):
+    return User.get(_id)
 
 
 def user_login(user, password=None):
+    """
+    sys login internal can set password=None
+    """
     if password:
         ret = check_password_hash(user.password, b64_decode(password))
         if not ret:
@@ -84,61 +91,56 @@ def del_user(ids):
         if not _id:
             continue
         
-        u = User.query.filter_by(id = _id, state = STATUS_VALID).first()
+        u = User.query.filter_by(id = _id, state = STATE_VALID).first()
         if not u:
             continue
 
-        u.state = STATUS_DELETED
+        u.state = STATE_DELETED
         db.session.add(u)
         db.session.commit()
     return True, ''
 
 
 def username_is_existed(name):
-    return db.session.query(User).filter(User.name==name, User.state==STATUS_VALID).first()
+    return db.session.query(User).filter(User.name==name, User.state==STATE_VALID).first()
 
 
 def b64_decode(s):
     return base64.b64decode(s).decode('utf8')
 
 
-def modify_user(_id, **kwargs):
-    c = User.query.filter_by(id = _id).first()
-    if not c:
-        raise UserError(message= "The user is not existed!")
+def check_password(user, password):
+    if not check_password_hash(user.password, b64_decode(password)):
+        raise ArgumentError(message= 'Password error!')
 
+
+def modify_user(user, **kwargs):
     name = kwargs.get("name")
-    if name and name != c.name:# name用于登陆，必须唯一
+    if name and name != user.name:# name用于登陆，必须唯一
         if username_is_existed(name):
             raise UserError(message= "The username is existed!")
 
-        c.name = name.strip()
+        user.name = name.strip()
 
-    if kwargs.get("phone", ""):
-        c.phone = kwargs.get("phone", "").strip()
+    if kwargs.get("phone"):
+        user.phone = kwargs.get("phone").strip()
 
-    password = kwargs.get("password")
     new_password = kwargs.get("new_password")
     if new_password:
-        if password and not check_password_hash(c.password, b64_decode(password)):
-            raise ArgumentError(message= 'Password error!')
+        user.password = generate_password_hash(b64_decode(new_password))
 
-        c.password = generate_password_hash(b64_decode(new_password))
-
-    if kwargs.get("email", ""):
-        c.email = kwargs.get("email", "").strip()
+    if kwargs.get("email"):
+        user.email = kwargs.get("email").strip()
 
     if kwargs.get('state'):
-        c.state = kwargs.get('state')
+        user.state = kwargs.get('state')
 
     if kwargs.get('role_id'):
-        c.role_id = kwargs.get('role_id')
+        user.role_id = kwargs.get('role_id')
 
-    if kwargs.get('group_id'):
-        c.group_id = kwargs.get('group_id')
-    db.session.add(c)
+    db.session.add(user)
     db.session.commit()
-    return c
+    return user
 
 
 def create_user(**kwargs):
@@ -152,7 +154,7 @@ def create_user(**kwargs):
     if username_is_existed(name):
         raise UserError(message= "The user is existed!")
 
-    c = User(state = STATUS_VALID)
+    c = User(state = STATE_VALID)
     c.name = name.strip()
     c.role_id = role_id
     c.group_id = group_id
@@ -208,11 +210,11 @@ def del_role(ids):
         if not _id:
             continue
         
-        r = Role.query.filter_by(id = _id, state = STATUS_VALID).first()
+        r = Role.query.filter_by(id = _id, state = STATE_VALID).first()
         if not r:
             continue
 
-        r.state = STATUS_DELETED
+        r.state = STATE_DELETED
         db.session.add(r)
         db.session.commit()
 
@@ -287,7 +289,7 @@ def modify_group(**kwargs):
 def check_email(**kwargs):
     name = kwargs.get('name')
     email = kwargs.get('email')
-    user = User.query.filter(User.name==name, User.state==STATUS_VALID).first()
+    user = User.query.filter(User.name==name, User.state==STATE_VALID).first()
     if not user or user.email != email:
         raise ArgumentError(message="Email error!")
 
